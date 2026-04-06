@@ -14,7 +14,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
 
@@ -1350,10 +1350,29 @@ const CITY_COORDS = {
   "san diego":[14,68],"seattle":[11,17],"seattle, wa":[11,17],
   "portland":[11,22],"portland, or":[11,22],"sacramento":[10,50],
 };
-// Geocoding cache: city string → [pctX, pctY] (for legacy pct system)
+// In-memory geocoding cache: city → [pctX, pctY]
 const geoCache = {};
-// Raw lat/lng cache: city string → [lat, lng]
+// Raw lat/lng cache: city → [lat, lng]
 const latLngCache = {};
+
+// Load persisted geocode results from localStorage (called from init)
+function loadGeoFromStorage(){
+  try{
+    const stored = localStorage.getItem('pp_geo');
+    if(stored){
+      const data = JSON.parse(stored);
+      Object.assign(latLngCache, data);
+      // also populate geoCache from stored lat/lng
+      Object.entries(data).forEach(([k,ll])=>{
+        if(!geoCache[k]) geoCache[k] = latLngToPct(ll[0], ll[1]);
+      });
+    }
+  }catch(e){}
+}
+
+function saveGeoToStorage(){
+  try{ localStorage.setItem('pp_geo', JSON.stringify(latLngCache)); }catch(e){}
+}
 
 function getCityCoords(city){
   if(!city) return null;
@@ -1396,6 +1415,7 @@ async function geocodeCity(city){
     const pct = latLngToPct(lat, lng);
     geoCache[k] = pct;
     latLngCache[k] = [lat, lng]; // store raw for Leaflet
+    saveGeoToStorage(); // persist across page reloads
     return pct;
   }catch(e){
     console.warn('Geocode failed for',city,e);
@@ -2250,9 +2270,6 @@ async function renderMap(partyUsers){
   activeBioUser = null;
   document.getElementById('bio-popup').style.display='none';
 
-  // Geocode all users in parallel first
-  await Promise.all(partyUsers.map(u=>u.city?geocodeCity(u.city):Promise.resolve(null)));
-
   // Initialise Leaflet map on first call
   if(!leafletMap){
     leafletMap = L.map('leaflet-map', {
@@ -2275,6 +2292,16 @@ async function renderMap(partyUsers){
   // Remove old markers
   leafletMarkers.forEach(m=>leafletMap.removeLayer(m));
   leafletMarkers = [];
+
+  // Background-geocode any cities not yet in cache, then re-render
+  const unknownCities = partyUsers
+    .filter(u=>u.city && !latLngCache[(u.city||'').trim().toLowerCase()])
+    .map(u=>u.city);
+  if(unknownCities.length > 0){
+    Promise.all(unknownCities.map(c=>geocodeCity(c))).then(()=>{
+      renderMap(partyUsers); // re-render once geocoding done
+    });
+  }
 
   // Add markers for each user with a city
   partyUsers.forEach((u,i)=>{
@@ -2856,8 +2883,9 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 // ═══════════════════════════════════════════════════════
 (async function init(){
   setLoading('Connecting...');
+  // Load persisted geocode results from localStorage
+  loadGeoFromStorage();
   // Pre-populate latLngCache from static CITY_COORDS table
-  // (convert pct back to approximate lat/lng for Leaflet)
   Object.entries(CITY_COORDS).forEach(([k,pct])=>{
     if(!latLngCache[k]){
       const lat = 49.5 - (pct[1]/100)*25.5;
