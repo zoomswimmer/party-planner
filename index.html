@@ -1762,15 +1762,19 @@ function getTopActivity(){
 // ═══════════════════════════════════════════════════════
 async function createEvent(){
   const pid=document.getElementById('create-party-id').value.trim();
-  const name=document.getElementById('create-event-name').value.trim();
-  if(!pid){document.getElementById('create-party-id').focus();return;}
-  if(!name){document.getElementById('create-event-name').value=pid;} // default name = id
+  let name=document.getElementById('create-event-name').value.trim();
+  if(!pid){
+    document.getElementById('create-party-id').focus();
+    alert('Please enter an Event ID first.');
+    return;
+  }
   if(!/^[a-z0-9-]+$/.test(pid)){alert('Use lowercase letters, numbers and hyphens only.');return;}
   if(allPartyIds.includes(pid)){alert('An event with that ID already exists.');return;}
+  if(!name) name=pid; // default event name to ID if blank
   document.getElementById('loading-overlay').classList.remove('hidden');
   setLoading('Creating '+pid+'...');
   try{
-    const newParty={...EMPTY_PARTY, tripName:name||pid};
+    const newParty={...EMPTY_PARTY, tripName:name};
     await sheetsCall('setState',{partyId:pid,state:newParty});
     document.getElementById('create-party-id').value='';
     document.getElementById('create-event-name').value='';
