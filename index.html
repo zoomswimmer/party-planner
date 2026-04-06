@@ -1,0 +1,2207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<title>Party Planner</title>
+<!-- Google Sheets Sync: set SCRIPT_URL to your Apps Script Web App URL -->
+<script>
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcMoA2WOa0MKwU7OO_KtVCmELUWCvSDIJXJ4LFzYjY07vf0yd2sT2FGU8OchZf_th4ng/exec';
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════
+   RESET & ROOT
+═══════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0c0c0c;
+  --surface:#141414;
+  --card:#1c1c1c;
+  --card2:#222;
+  --border:#282828;
+  --border2:#333;
+  --border3:#3e3e3e;
+  --text:#efefef;
+  --text2:#c8c8c8;
+  --muted:#787878;
+  --muted2:#4a4a4a;
+  --white:#ffffff;
+  --off-white:#f0f0f0;
+  --r:12px;
+  --font-display:'Cormorant Garamond',serif;
+  --font-body:'DM Sans',sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-body);-webkit-tap-highlight-color:transparent;overscroll-behavior:none;}
+input,textarea,select,button{font-family:var(--font-body);}
+button{cursor:pointer;}
+a{color:inherit;text-decoration:none;}
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-thumb{background:var(--border3);border-radius:3px;}
+
+/* ═══════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════ */
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+
+/* ── VIEWS ── */
+.view{display:none;flex-direction:column;height:100%;}
+.view.active{display:flex;}
+
+/* ═══════════════════════════════════════════
+   LOGIN
+═══════════════════════════════════════════ */
+#view-login{align-items:center;justify-content:center;background:var(--bg);padding:24px;
+  background-image:radial-gradient(ellipse at 70% 10%, #1e1e1e 0%, transparent 60%),
+                   radial-gradient(ellipse at 20% 80%, #181818 0%, transparent 50%);}
+.login-box{width:100%;max-width:380px;}
+.login-eyebrow{font-size:.65rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.login-title{font-family:var(--font-display);font-size:3rem;font-weight:700;color:var(--white);line-height:1;margin-bottom:6px;}
+.login-sub{font-size:.82rem;color:var(--muted);margin-bottom:32px;}
+.login-field{margin-bottom:16px;}
+.login-label{font-size:.65rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;}
+.login-input{width:100%;background:var(--card);border:1px solid var(--border2);border-radius:8px;
+  padding:12px 14px;color:var(--text);font-size:.93rem;outline:none;transition:border .2s;}
+.login-input:focus{border-color:var(--border3);}
+.login-btn{width:100%;background:var(--white);color:#0c0c0c;border:none;border-radius:8px;
+  padding:13px;font-size:.9rem;font-weight:700;letter-spacing:.04em;transition:background .2s,transform .1s;margin-top:4px;}
+.login-btn:hover{background:var(--off-white);}
+.login-btn:active{transform:scale(.98);}
+.login-error{color:#cc4444;font-size:.78rem;margin-top:10px;text-align:center;min-height:18px;}
+.login-hint{font-size:.72rem;color:var(--muted2);text-align:center;margin-top:14px;}
+
+/* ═══════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════ */
+#view-app{flex-direction:column;}
+
+/* ── TOPBAR ── */
+.topbar{flex-shrink:0;height:52px;background:rgba(12,12,12,.92);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;
+  justify-content:space-between;padding:0 16px;position:relative;z-index:50;}
+.topbar-title{font-family:var(--font-display);font-size:1.25rem;font-weight:700;color:var(--white);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%;}
+.topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.tb-avatar{width:30px;height:30px;border-radius:50%;background:var(--card2);
+  border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;
+  font-size:.72rem;font-weight:700;color:var(--text2);}
+.tb-admin{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  background:var(--card2);color:var(--muted);border:1px solid var(--border2);border-radius:20px;padding:2px 7px;}
+.tb-signout{background:transparent;border:1px solid var(--border);color:var(--muted);
+  border-radius:6px;padding:4px 10px;font-size:.72rem;transition:all .2s;}
+.tb-signout:hover{border-color:var(--border3);color:var(--text2);}
+
+/* ── NAV ── */
+.nav{flex-shrink:0;display:flex;overflow-x:auto;background:var(--surface);
+  border-bottom:1px solid var(--border);scrollbar-width:none;padding:0 2px;}
+.nav::-webkit-scrollbar{display:none;}
+.nav-tab{flex-shrink:0;background:transparent;border:none;border-bottom:2px solid transparent;
+  color:var(--muted);font-size:.75rem;font-weight:500;padding:10px 14px 9px;
+  transition:all .2s;white-space:nowrap;}
+.nav-tab:hover{color:var(--text2);}
+.nav-tab.active{color:var(--white);border-bottom-color:var(--white);}
+
+/* ── PANELS ── */
+.panels{flex:1;overflow:hidden;position:relative;}
+.panel{position:absolute;inset:0;overflow-y:auto;padding:18px 14px 48px;display:none;}
+.panel.active{display:block;}
+
+/* ═══════════════════════════════════════════
+   COMMON COMPONENTS
+═══════════════════════════════════════════ */
+.sec-title{font-family:var(--font-display);font-size:1.6rem;font-weight:700;color:var(--white);margin-bottom:2px;line-height:1.1;}
+.sec-sub{font-size:.76rem;color:var(--muted);margin-bottom:16px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px;margin-bottom:10px;}
+.card-label{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:9px;}
+.field-wrap{margin-bottom:12px;}
+.field-label{font-size:.63rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);display:block;margin-bottom:5px;}
+.field-input{width:100%;background:var(--card2);border:1px solid var(--border2);border-radius:8px;
+  padding:10px 12px;color:var(--text);font-size:.88rem;outline:none;transition:border .2s;}
+.field-input:focus{border-color:var(--border3);}
+textarea.field-input{resize:vertical;min-height:68px;line-height:1.5;}
+select.field-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;}
+select.field-input option{background:var(--card2);}
+.btn-primary{background:var(--white);color:#0c0c0c;border:none;border-radius:8px;
+  padding:11px 20px;font-size:.88rem;font-weight:700;letter-spacing:.02em;transition:background .15s,transform .1s;}
+.btn-primary:hover{background:var(--off-white);}
+.btn-primary:active{transform:scale(.97);}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--muted);
+  border-radius:8px;padding:9px 16px;font-size:.82rem;transition:all .2s;}
+.btn-ghost:hover{border-color:var(--border3);color:var(--text2);}
+.btn-danger{background:transparent;border:1px solid rgba(180,60,60,.35);color:#b04040;
+  border-radius:6px;padding:5px 11px;font-size:.74rem;transition:all .2s;}
+.btn-danger:hover{background:rgba(180,60,60,.1);}
+.btn-icon-sm{width:32px;height:32px;border-radius:7px;background:var(--white);border:none;
+  color:#0c0c0c;display:inline-flex;align-items:center;justify-content:center;font-size:.85rem;transition:background .2s;}
+.btn-icon-sm:hover{background:var(--off-white);}
+.divider{height:1px;background:var(--border);margin:14px 0;}
+.toggle-switch{width:38px;height:21px;border-radius:11px;border:none;position:relative;cursor:pointer;transition:background .25s;flex-shrink:0;}
+.toggle-switch.on{background:var(--white);}
+.toggle-switch.off{background:var(--border2);}
+.toggle-switch::after{content:'';position:absolute;top:2px;width:17px;height:17px;border-radius:50%;background:var(--bg);transition:left .2s;}
+.toggle-switch.on::after{left:19px;}
+.toggle-switch.off::after{left:2px;}
+.badge{font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:20px;padding:2px 7px;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);font-size:.82rem;}
+.empty-state .es-icon{font-size:1.8rem;margin-bottom:8px;opacity:.3;}
+
+/* ═══════════════════════════════════════════
+   HOME / MAP
+═══════════════════════════════════════════ */
+#panel-home{padding:0;}
+.home-greeting{padding:16px 16px 10px;}
+.home-eyebrow{font-size:.62rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.home-title{font-family:var(--font-display);font-size:1.8rem;font-weight:700;color:var(--white);line-height:1.1;}
+.home-sub{font-size:.74rem;color:var(--muted);margin-top:4px;}
+
+.map-outer{margin:0 12px;border-radius:10px;overflow:hidden;border:1px solid var(--border);background:#111;position:relative;}
+.map-svg-el{width:100%;display:block;}
+
+/* dot */
+.map-pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;z-index:5;}
+.map-pin-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--bg);transition:transform .15s;}
+.map-pin:hover .map-pin-dot{transform:scale(1.3);}
+.map-pin-pulse{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:22px;height:22px;border-radius:50%;opacity:0;animation:mpulse 2.4s ease-out infinite;}
+@keyframes mpulse{0%{transform:translate(-50%,-50%) scale(.5);opacity:.5;}100%{transform:translate(-50%,-50%) scale(2.2);opacity:0;}}
+.map-pin-label{position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  font-size:.58rem;font-weight:600;color:var(--text2);white-space:nowrap;
+  background:rgba(12,12,12,.75);border-radius:4px;padding:1px 4px;pointer-events:none;}
+
+/* bio popup */
+.bio-popup{position:absolute;z-index:20;background:var(--card);border:1px solid var(--border2);
+  border-radius:10px;padding:12px;width:168px;box-shadow:0 12px 40px rgba(0,0,0,.7);
+  animation:popIn .15s ease;}
+@keyframes popIn{from{opacity:0;transform:scale(.9);}to{opacity:1;transform:scale(1);}}
+.bio-popup-arrow{position:absolute;width:8px;height:8px;background:var(--card);
+  border-right:1px solid var(--border2);border-bottom:1px solid var(--border2);transform:rotate(45deg);}
+.bio-popup-head{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.bio-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0;}
+.bio-name{font-size:.84rem;font-weight:700;color:var(--white);}
+.bio-city{font-size:.66rem;color:var(--muted);}
+.bio-quote{font-size:.72rem;color:var(--muted);line-height:1.5;margin-bottom:7px;font-style:italic;}
+.bio-tags{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:0;}
+.bio-tag{font-size:.6rem;background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:2px 6px;color:var(--muted);}
+.bio-edit-link{display:block;margin-top:8px;padding-top:7px;border-top:1px solid var(--border);
+  font-size:.66rem;color:var(--muted);text-align:center;}
+.bio-edit-link:hover{color:var(--text2);}
+
+/* crew strip */
+.crew-strip{display:flex;gap:6px;padding:9px 12px;overflow-x:auto;border-top:1px solid var(--border);}
+.crew-strip::-webkit-scrollbar{display:none;}
+.crew-chip{display:flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:4px 10px;flex-shrink:0;cursor:pointer;transition:border-color .15s;}
+.crew-chip:hover{border-color:var(--border3);}
+.crew-chip.active{border-color:var(--border3);}
+.crew-chip-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.crew-chip-name{font-size:.72rem;color:var(--text);}
+.crew-chip-city{font-size:.64rem;color:var(--muted);}
+
+/* home quick nav */
+.home-nav-row{display:flex;gap:8px;padding:10px 12px 14px;border-top:1px solid var(--border);}
+.home-nav-btn{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:9px 6px;text-align:center;font-size:.72rem;color:var(--muted);transition:all .2s;}
+.home-nav-btn:hover{border-color:var(--border3);color:var(--text2);}
+.home-nav-btn.primary-btn{background:var(--white);color:#0c0c0c;border-color:var(--white);font-weight:600;}
+.home-nav-btn.primary-btn:hover{background:var(--off-white);}
+
+/* profile edit panel */
+.profile-preview-card{display:flex;align-items:center;gap:12px;background:var(--card2);
+  border:1px solid var(--border);border-radius:10px;padding:13px;margin-bottom:16px;}
+.profile-av-lg{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:1.1rem;font-weight:700;flex-shrink:0;}
+
+/* ═══════════════════════════════════════════
+   AVAILABILITY
+═══════════════════════════════════════════ */
+.cal-nav-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.cal-month-label{font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--white);}
+.cal-arrows{display:flex;gap:5px;}
+.cal-arrow-btn{width:28px;height:28px;border-radius:7px;background:var(--card2);border:1px solid var(--border);
+  color:var(--muted);font-size:.75rem;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.cal-arrow-btn:hover{border-color:var(--border3);color:var(--text2);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:14px;}
+.cal-dow{text-align:center;font-size:.58rem;font-weight:600;letter-spacing:.06em;color:var(--muted);padding-bottom:6px;text-transform:uppercase;}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:.76rem;
+  border-radius:6px;color:var(--muted2);cursor:pointer;user-select:none;transition:background .1s;}
+.cal-day.other-month{color:var(--muted2);opacity:.3;cursor:default;}
+.cal-day.cur-month{color:var(--text2);}
+.cal-day.past{opacity:.3;cursor:default;}
+.cal-day.today{background:var(--card2);color:var(--white);font-weight:600;}
+.cal-day:hover:not(.other-month):not(.past){background:var(--card2);}
+
+/* range states — we use up to 5 colors for different ranges */
+.cal-day.r0-s,.cal-day.r0-e{background:var(--white)!important;color:#0c0c0c!important;font-weight:700;}
+.cal-day.r0-m{background:rgba(255,255,255,.14)!important;color:var(--white)!important;}
+.cal-day.r1-s,.cal-day.r1-e{background:#888!important;color:#0c0c0c!important;font-weight:700;}
+.cal-day.r1-m{background:rgba(140,140,140,.2)!important;color:var(--text)!important;}
+.cal-day.r2-s,.cal-day.r2-e{background:#555!important;color:var(--white)!important;font-weight:700;}
+.cal-day.r2-m{background:rgba(90,90,90,.2)!important;color:var(--text)!important;}
+.cal-day.r3-s,.cal-day.r3-e{background:#3a3a3a!important;color:var(--text2)!important;font-weight:700;border:1px solid #555;}
+.cal-day.r3-m{background:rgba(70,70,70,.2)!important;color:var(--text)!important;}
+.cal-day.r4-s,.cal-day.r4-e{background:#2a2a2a!important;color:var(--muted)!important;font-weight:700;border:1px solid #444;}
+.cal-day.r4-m{background:rgba(55,55,55,.15)!important;color:var(--text)!important;}
+.cal-day.selecting{background:rgba(255,255,255,.07)!important;color:var(--text)!important;border:1px dashed var(--border3)!important;}
+.cal-day.sel-anchor{background:rgba(255,255,255,.18)!important;color:var(--white)!important;font-weight:600;}
+/* round caps */
+.cal-day.r0-s,.cal-day.r1-s,.cal-day.r2-s,.cal-day.r3-s,.cal-day.r4-s{border-radius:6px 0 0 6px;}
+.cal-day.r0-e,.cal-day.r1-e,.cal-day.r2-e,.cal-day.r3-e,.cal-day.r4-e{border-radius:0 6px 6px 0;}
+.cal-day.r0-s.r0-e,.cal-day.r1-s.r1-e,.cal-day.r2-s.r2-e{border-radius:6px;}
+
+/* range hint */
+.avail-hint{font-size:.73rem;color:var(--muted);background:var(--card);border:1px solid var(--border);
+  border-radius:8px;padding:8px 11px;margin-bottom:12px;line-height:1.55;}
+.avail-hint strong{color:var(--text2);}
+
+/* range pills list */
+.ranges-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.ranges-lbl{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);}
+.range-pill{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);
+  border-radius:8px;padding:8px 10px;margin-bottom:5px;transition:border-color .15s;}
+.rp-swatch{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.rp-dates{flex:1;font-size:.8rem;font-weight:500;color:var(--text);}
+.rp-days{font-size:.66rem;color:var(--muted);}
+.rp-del{background:transparent;border:none;color:var(--muted2);font-size:.78rem;padding:2px 4px;
+  border-radius:4px;transition:color .15s;}
+.rp-del:hover{color:#b04040;}
+.add-range-btn{width:100%;background:transparent;border:1px dashed var(--border2);border-radius:8px;
+  padding:9px;font-size:.74rem;color:var(--muted);margin-bottom:12px;transition:all .2s;}
+.add-range-btn:hover{border-color:var(--border3);color:var(--text2);}
+.rank-btn{width:100%;background:var(--white);color:#0c0c0c;border:none;border-radius:8px;
+  padding:11px;font-size:.88rem;font-weight:700;letter-spacing:.02em;transition:all .2s;}
+.rank-btn:hover{background:var(--off-white);}
+.rank-btn:disabled{background:var(--card2);color:var(--muted);cursor:default;}
+
+/* rank screen */
+.rank-screen{display:none;}
+.rank-screen.active{display:block;}
+.rank-item{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;margin-bottom:6px;transition:border-color .2s;}
+.rank-item.dragging{border-color:var(--border3);opacity:.7;}
+.rank-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;font-weight:700;flex-shrink:0;}
+.rank-num.n0{background:var(--white);color:#0c0c0c;}
+.rank-num.n1{background:#777;color:#0c0c0c;}
+.rank-num.n2{background:#444;color:var(--text2);}
+.rank-num.n3{background:#2e2e2e;color:var(--muted);border:1px solid #444;}
+.rank-num.n4{background:#222;color:var(--muted2);border:1px solid #333;}
+.rank-dates-main{font-size:.83rem;font-weight:500;color:var(--text);flex:1;}
+.rank-dates-sub{font-size:.67rem;color:var(--muted);margin-top:1px;}
+.rank-move{display:flex;flex-direction:column;gap:2px;}
+.rank-arrow{width:22px;height:16px;background:var(--card2);border:1px solid var(--border);
+  border-radius:3px;color:var(--muted);font-size:.55rem;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.rank-arrow:hover{background:var(--border2);color:var(--text2);}
+.rank-arrow:disabled{opacity:.25;cursor:default;}
+
+/* who is free panel */
+.overlap-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:13px;margin-top:12px;}
+.overlap-title{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:9px;}
+.overlap-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.overlap-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.62rem;font-weight:700;flex-shrink:0;}
+.overlap-name{font-size:.8rem;color:var(--text);flex:1;}
+.overlap-dots{display:flex;gap:3px;}
+.overlap-dot{width:7px;height:7px;border-radius:50%;}
+.best-overlap{background:var(--card2);border:1px solid var(--border2);border-radius:9px;padding:11px 12px;margin-top:10px;}
+.best-overlap-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px;}
+.best-overlap-val{font-size:.9rem;font-weight:600;color:var(--white);}
+.best-overlap-sub{font-size:.7rem;color:var(--muted);margin-top:2px;}
+
+/* ═══════════════════════════════════════════
+   ACTIVITIES
+═══════════════════════════════════════════ */
+.act-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.add-form{background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);
+  padding:15px;margin-bottom:14px;display:none;}
+.add-form.open{display:block;}
+.add-form-title{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:12px;}
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.activity-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  margin-bottom:8px;overflow:hidden;transition:border-color .2s;}
+.activity-card:hover{border-color:var(--border3);}
+.act-head{display:flex;align-items:center;gap:10px;padding:12px 13px;cursor:pointer;user-select:none;}
+.act-rank-badge{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0;border:1px solid transparent;}
+.act-rank-badge.r1{background:var(--white);color:#0c0c0c;}
+.act-rank-badge.r2{background:#777;color:#0c0c0c;}
+.act-rank-badge.r3{background:#444;color:var(--white);}
+.act-info{flex:1;min-width:0;}
+.act-name{font-weight:600;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+.act-cat-cost{font-size:.69rem;color:var(--muted);margin-top:1px;}
+.act-score{font-size:.8rem;font-weight:600;color:var(--text2);flex-shrink:0;}
+.act-chev{font-size:.6rem;color:var(--muted2);flex-shrink:0;transition:transform .2s;}
+.act-chev.open{transform:rotate(180deg);}
+.act-body{border-top:1px solid var(--border);padding:12px 13px;display:none;}
+.act-body.open{display:block;}
+.act-desc{font-size:.8rem;color:var(--muted);line-height:1.55;margin-bottom:10px;}
+.act-meta-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.meta-chip{font-size:.69rem;color:var(--muted);}
+.meta-chip strong{color:var(--text2);}
+.meta-link{font-size:.69rem;color:var(--text2);}
+.meta-link:hover{text-decoration:underline;}
+.vote-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.vote-lbl{font-size:.73rem;color:var(--muted);}
+.vote-btns{display:flex;gap:3px;margin-left:auto;}
+.vote-btn{padding:4px 10px;border-radius:5px;border:1px solid var(--border2);background:transparent;
+  color:var(--muted);font-size:.75rem;transition:all .12s;}
+.vote-btn:hover{border-color:var(--border3);color:var(--text2);}
+.vote-btn.sel{background:var(--white);color:#0c0c0c;border-color:var(--white);font-weight:700;}
+.vote-bar-wrap{height:3px;background:var(--border);border-radius:2px;margin-bottom:11px;overflow:hidden;}
+.vote-bar-fill{height:100%;background:var(--white);border-radius:2px;transition:width .4s;}
+.comments-lbl{font-size:.62rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.comment{display:flex;gap:6px;margin-bottom:6px;}
+.c-av{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.58rem;font-weight:700;flex-shrink:0;margin-top:1px;}
+.c-bub{background:var(--surface);border-radius:7px;padding:5px 9px;flex:1;}
+.c-auth{font-size:.62rem;font-weight:700;color:var(--text2);margin-bottom:1px;}
+.c-txt{font-size:.78rem;color:var(--text);line-height:1.45;}
+.comment-input-row{display:flex;gap:6px;margin-top:8px;}
+.comment-input-row input{flex:1;background:var(--surface);border:1px solid var(--border);
+  border-radius:7px;padding:7px 10px;color:var(--text);font-size:.8rem;outline:none;transition:border .2s;}
+.comment-input-row input:focus{border-color:var(--border3);}
+
+/* locked overlay */
+.locked-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px 30px;text-align:center;color:var(--muted);}
+.locked-icon{font-size:2rem;margin-bottom:12px;opacity:.25;}
+.locked-title{font-size:.9rem;font-weight:600;margin-bottom:5px;}
+.locked-sub{font-size:.76rem;color:var(--muted2);}
+
+/* ═══════════════════════════════════════════
+   OVERVIEW
+═══════════════════════════════════════════ */
+.announce-banner{background:var(--white);color:#0c0c0c;border-radius:var(--r);padding:15px;margin-bottom:12px;}
+.announce-eyebrow{font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#555;margin-bottom:4px;}
+.announce-title{font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:#0c0c0c;margin-bottom:3px;}
+.announce-body{font-size:.78rem;color:#444;line-height:1.5;}
+.announce-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.announce-chip{font-size:.68rem;background:#ececec;border-radius:20px;padding:3px 9px;color:#444;}
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.ov-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:13px;text-align:center;}
+.ov-val{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--white);line-height:1;}
+.ov-lbl{font-size:.62rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-top:4px;}
+.heat-row{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.heat-lbl{font-size:.7rem;color:var(--muted);width:82px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.heat-wrap{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.heat-fill{height:100%;border-radius:3px;transition:width .5s;}
+.heat-cnt{font-size:.64rem;color:var(--muted);width:26px;text-align:right;flex-shrink:0;}
+
+/* ═══════════════════════════════════════════
+   ADMIN
+═══════════════════════════════════════════ */
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-label{font-size:.84rem;color:var(--text);}
+.toggle-sublabel{font-size:.68rem;color:var(--muted);margin-top:1px;}
+.user-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);}
+.user-row:last-child{border-bottom:none;}
+.user-row-left{display:flex;align-items:center;gap:9px;font-size:.83rem;color:var(--text);}
+.user-role-badge{font-size:.62rem;color:var(--muted2);}
+.push-btn{width:100%;background:var(--white);color:#0c0c0c;border:none;border-radius:8px;
+  padding:12px;font-size:.88rem;font-weight:700;letter-spacing:.02em;transition:background .2s;}
+.push-btn:hover{background:var(--off-white);}
+.push-btn.pushed{background:var(--card2);color:var(--muted);cursor:default;}
+.admin-select{width:100%;background:var(--card2);border:1px solid var(--border2);border-radius:8px;
+  padding:10px 12px;color:var(--text);font-size:.85rem;outline:none;margin-bottom:8px;
+  appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;}
+.admin-select option{background:var(--card2);}
+.final-dates-display{background:var(--card2);border:1px solid var(--border);border-radius:8px;
+  padding:10px 12px;font-size:.83rem;color:var(--text2);margin-bottom:8px;cursor:pointer;}
+
+/* ═══════════════════════════════════════════
+   USER COLOR PALETTES (up to 8 users)
+═══════════════════════════════════════════ */
+.uc-0{background:#ffffff;color:#0c0c0c;}
+.uc-1{background:#aaaaaa;color:#0c0c0c;}
+.uc-2{background:#777777;color:#0c0c0c;}
+.uc-3{background:#555555;color:#efefef;}
+.uc-4{background:#3a3a3a;color:#c8c8c8;border:1px solid #555;}
+.uc-5{background:#2a2a2a;color:#aaa;border:1px solid #444;}
+.uc-6{background:#1e1e1e;color:#888;border:1px solid #333;}
+.uc-7{background:#161616;color:#666;border:1px solid #2a2a2a;}
+
+/* Range swatches matching user colors */
+.rs-0{background:#fff;}
+.rs-1{background:#aaa;}
+.rs-2{background:#777;}
+.rs-3{background:#555;}
+.rs-4{background:#3a3a3a;border:1px solid #555;}
+
+/* ═══════════════════════════════════════════
+   SYNC STATUS
+═══════════════════════════════════════════ */
+.sync-bar{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:5px 14px;background:var(--surface);border-top:1px solid var(--border);
+  font-size:.68rem;color:var(--muted);}
+.sync-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.sync-dot.synced{background:#5a9e6f;}
+.sync-dot.syncing{background:#c8a84b;animation:syncpulse .8s ease-in-out infinite;}
+.sync-dot.error{background:#9e5a5a;}
+.sync-dot.offline{background:var(--muted2);}
+@keyframes syncpulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.sync-bar.error-bar{background:rgba(100,30,30,.3);border-top-color:#5a2020;}
+.sync-bar.error-bar .sync-msg{color:#c07070;}
+
+/* ── loading overlay ── */
+.loading-overlay{position:fixed;inset:0;background:var(--bg);z-index:200;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+.loading-overlay.hidden{display:none;}
+.loading-title{font-family:var(--font-display);font-size:1.8rem;font-weight:700;color:var(--white);}
+.loading-sub{font-size:.8rem;color:var(--muted);}
+.loading-spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--white);
+  border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── config screen (shown when SCRIPT_URL not set) ── */
+.config-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:var(--bg);padding:24px;}
+.config-box{max-width:420px;width:100%;}
+.config-title{font-family:var(--font-display);font-size:2.2rem;color:var(--white);margin-bottom:6px;}
+.config-sub{font-size:.82rem;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+.config-steps{font-size:.8rem;color:var(--muted);margin-bottom:20px;line-height:2;}
+.config-steps strong{color:var(--text2);}
+.config-url-input{width:100%;background:var(--card);border:1px solid var(--border2);border-radius:8px;
+  padding:11px 13px;color:var(--text);font-size:.82rem;outline:none;margin-bottom:10px;font-family:monospace;}
+.config-url-input:focus{border-color:var(--border3);}
+
+/* ═══════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════ */
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeIn .2s ease;}
+
+/* ═══════════════════════════════════════════
+   MODAL / OVERLAY
+═══════════════════════════════════════════ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;
+  display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-sheet{background:var(--surface);border:1px solid var(--border);border-radius:16px 16px 0 0;
+  padding:20px 18px 32px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;
+  animation:slideUp .2s ease;}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal-handle{width:36px;height:3px;background:var(--border2);border-radius:2px;margin:0 auto 16px;}
+.modal-title{font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--white);margin-bottom:4px;}
+.modal-sub{font-size:.76rem;color:var(--muted);margin-bottom:16px;}
+</style>
+</head>
+<body>
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-title" id="loading-trip-name">Party Planner</div>
+  <div class="loading-sub" id="loading-msg">Connecting…</div>
+</div>
+
+<!-- Config screen (shown if SCRIPT_URL not set) -->
+<div id="config-screen" class="config-screen" style="display:none">
+  <div class="config-box">
+    <div class="config-title">Connect Your Sheet</div>
+    <div class="config-sub">Paste your Apps Script Web App URL below to connect this party planner to Google Sheets. See the setup guide (SETUP.md) for instructions.</div>
+    <div class="config-steps">
+      <strong>1.</strong> Open your Google Sheet<br>
+      <strong>2.</strong> Extensions → Apps Script → paste Code.gs<br>
+      <strong>3.</strong> Deploy → New deployment → Web app<br>
+      <strong>4.</strong> Copy the URL and paste it below
+    </div>
+    <input class="config-url-input" id="config-url-input" placeholder="https://script.google.com/macros/s/…/exec"/>
+    <button class="login-btn" onclick="setScriptUrl()">Connect →</button>
+  </div>
+</div>
+
+<div id="app">
+
+<!-- ═══════ LOGIN ═══════ -->
+<div id="view-login" class="view active">
+  <div class="login-box">
+    <div class="login-eyebrow">Welcome back</div>
+    <div class="login-title" id="login-trip-name">Party Planner</div>
+    <div class="login-sub">Sign in to start planning</div>
+    <div class="login-field">
+      <label class="login-label">Your name</label>
+      <input class="login-input" id="inp-name" type="text" placeholder="Enter your name" autocomplete="off"/>
+    </div>
+    <div class="login-field">
+      <label class="login-label">Password</label>
+      <input class="login-input" id="inp-pass" type="password" placeholder="••••••••"/>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign In →</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-hint" id="login-hint"></div>
+  </div>
+</div>
+
+<!-- ═══════ APP ═══════ -->
+<div id="view-app" class="view">
+  <div class="topbar">
+    <span class="topbar-title" id="topbar-title">Party Planner</span>
+    <div class="topbar-right">
+      <span class="tb-admin" id="tb-admin" style="display:none">Admin</span>
+      <div class="tb-avatar" id="tb-avatar">?</div>
+      <button class="tb-signout" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+  <div class="nav" id="main-nav">
+    <button class="nav-tab active" data-tab="home" onclick="switchTab('home',this)">Home</button>
+    <button class="nav-tab" data-tab="availability" onclick="switchTab('availability',this)">Availability</button>
+    <button class="nav-tab" data-tab="activities" onclick="switchTab('activities',this)">Activities</button>
+    <button class="nav-tab" id="tab-overview-btn" data-tab="overview" onclick="switchTab('overview',this)" style="display:none">Overview</button>
+    <button class="nav-tab" id="tab-admin-btn" data-tab="admin" onclick="switchTab('admin',this)" style="display:none">⚙ Admin</button>
+  </div>
+  <div class="panels">
+
+    <!-- ── HOME ── -->
+    <div class="panel active" id="panel-home">
+      <div class="home-greeting">
+        <div class="home-eyebrow">Welcome back</div>
+        <div class="home-title" id="home-title">Hey there 👋</div>
+        <div class="home-sub" id="home-sub">Tap a dot to see who's coming from where</div>
+      </div>
+      <div class="map-outer" id="map-outer">
+        <!-- US SVG -->
+        <svg id="map-svg" class="map-svg-el" viewBox="0 0 520 330" xmlns="http://www.w3.org/2000/svg">
+          <rect width="520" height="330" fill="#0e0e0e"/>
+          <!-- mainland -->
+          <path d="M62,62 L85,52 L125,46 L168,43 L210,41 L252,39 L294,39 L336,41 L375,46 L410,53 L438,62 L452,78 L457,98 L455,118 L446,134 L462,150 L466,170 L455,185 L438,192 L420,200 L400,212 L378,222 L358,228 L336,233 L308,237 L278,240 L250,240 L222,237 L194,230 L170,222 L148,216 L128,208 L108,198 L90,186 L76,172 L66,157 L59,142 L56,125 L54,108 L55,88 L58,74 Z" fill="#181818" stroke="#2a2a2a" stroke-width="1.2"/>
+          <!-- florida -->
+          <path d="M358,228 L362,245 L359,262 L352,274 L344,268 L341,252 L343,236 Z" fill="#181818" stroke="#2a2a2a" stroke-width="1.2"/>
+          <!-- great lakes -->
+          <ellipse cx="318" cy="96" rx="20" ry="9" fill="#0e0e0e" opacity=".7"/>
+          <ellipse cx="353" cy="89" rx="13" ry="6" fill="#0e0e0e" opacity=".7"/>
+          <ellipse cx="290" cy="92" rx="9" ry="5" fill="#0e0e0e" opacity=".5"/>
+          <!-- state grid -->
+          <line x1="205" y1="43" x2="200" y2="240" stroke="#1e1e1e" stroke-width=".8"/>
+          <line x1="285" y1="39" x2="280" y2="240" stroke="#1e1e1e" stroke-width=".8"/>
+          <line x1="365" y1="43" x2="356" y2="233" stroke="#1e1e1e" stroke-width=".8"/>
+          <line x1="55" y1="145" x2="466" y2="148" stroke="#1e1e1e" stroke-width=".8"/>
+          <line x1="55" y1="105" x2="457" y2="108" stroke="#1e1e1e" stroke-width=".8"/>
+          <line x1="60" y1="185" x2="455" y2="188" stroke="#1e1e1e" stroke-width=".8"/>
+          <!-- alaska -->
+          <path d="M 62,268 L 78,262 L 96,270 L 100,283 L 87,291 L 70,288 L 61,280 Z" fill="#181818" stroke="#2a2a2a" stroke-width="1"/>
+          <!-- hawaii -->
+          <ellipse cx="152" cy="298" rx="14" ry="5" fill="#181818" stroke="#2a2a2a" stroke-width="1"/>
+          <!-- line connectors rendered by JS -->
+          <g id="map-connectors"></g>
+        </svg>
+        <!-- pins rendered by JS -->
+        <div id="map-pins"></div>
+        <!-- bio popup rendered by JS -->
+        <div id="bio-popup" style="display:none"></div>
+      </div>
+      <div class="crew-strip" id="crew-strip"></div>
+      <div class="home-nav-row">
+        <button class="home-nav-btn" onclick="switchTab('availability', document.querySelector('[data-tab=availability]'))">📅 Availability</button>
+        <button class="home-nav-btn primary-btn" onclick="switchTab('activities', document.querySelector('[data-tab=activities]'))">🎉 Activities</button>
+      </div>
+    </div>
+
+    <!-- ── AVAILABILITY ── -->
+    <div class="panel" id="panel-availability">
+      <div class="sec-title">Availability</div>
+      <div class="sec-sub" id="avail-sub">Mark all dates you could make it</div>
+      <div id="avail-locked" class="locked-panel" style="display:none">
+        <div class="locked-icon">🔒</div>
+        <div class="locked-title">Availability is locked</div>
+        <div class="locked-sub">The organizer has locked this section</div>
+      </div>
+      <div id="avail-content">
+        <div class="avail-hint"><strong>Tap a start date, then an end date</strong> to add a free range. Add as many as you like, then rank them by preference.</div>
+        <div class="cal-nav-row">
+          <button class="cal-arrow-btn" onclick="calPrev()">‹</button>
+          <span class="cal-month-label" id="cal-month-label"></span>
+          <button class="cal-arrow-btn" onclick="calNext()">›</button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+
+        <!-- ranges list -->
+        <div id="ranges-section">
+          <div class="ranges-header">
+            <span class="ranges-lbl" id="ranges-count-lbl">Your ranges</span>
+            <span style="font-size:.65rem;color:var(--muted2)" id="ranges-count-num"></span>
+          </div>
+          <div id="ranges-list"></div>
+          <button class="add-range-btn" id="add-range-btn" onclick="resetSelection()" style="display:none">+ Add another range</button>
+          <button class="rank-btn" id="rank-btn" onclick="showRankScreen()" disabled>Rank My Availability →</button>
+        </div>
+
+        <!-- rank screen -->
+        <div class="rank-screen" id="rank-screen">
+          <div class="sec-title" style="font-size:1.3rem;margin-bottom:2px">Rank Your Dates</div>
+          <div class="sec-sub">Use arrows to set preference — #1 is your top pick</div>
+          <div id="rank-list"></div>
+          <div style="display:flex;gap:8px;margin-top:4px;">
+            <button class="btn-ghost" style="flex:1" onclick="showCalScreen()">← Back</button>
+            <button class="btn-primary" style="flex:2" onclick="saveAvailability()">Save Availability ✓</button>
+          </div>
+        </div>
+
+        <!-- saved state -->
+        <div id="avail-saved-view" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <span style="font-size:.75rem;color:var(--muted)">Saved ✓ &nbsp;<span id="avail-saved-count"></span></span>
+            <button class="btn-ghost" style="padding:5px 12px;font-size:.74rem" onclick="editAvailability()">Edit</button>
+          </div>
+          <div id="avail-saved-ranges"></div>
+          <div class="overlap-card">
+            <div class="overlap-title">Group overlap</div>
+            <div id="overlap-list"></div>
+            <div id="best-overlap-card"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ACTIVITIES ── -->
+    <div class="panel" id="panel-activities">
+      <div id="act-locked" class="locked-panel" style="display:none">
+        <div class="locked-icon">🔒</div>
+        <div class="locked-title">Activities are locked</div>
+        <div class="locked-sub">The organizer has locked this section</div>
+      </div>
+      <div id="act-content">
+        <div class="act-header-row">
+          <div class="sec-title" style="margin:0">Activities</div>
+          <button class="btn-ghost" id="add-act-btn" onclick="toggleAddForm()" style="padding:7px 13px;font-size:.76rem">+ Suggest</button>
+        </div>
+        <div class="sec-sub">Add suggestions · rate &amp; comment on everything</div>
+        <div class="add-form" id="add-form">
+          <div class="add-form-title">➕ New Activity</div>
+          <div class="field-wrap">
+            <label class="field-label">Name *</label>
+            <input class="field-input" id="af-name" placeholder="Activity name"/>
+          </div>
+          <div class="form-grid-2">
+            <div class="field-wrap">
+              <label class="field-label">Category</label>
+              <select class="field-input" id="af-cat"></select>
+            </div>
+            <div class="field-wrap">
+              <label class="field-label">Est. cost / person</label>
+              <input class="field-input" id="af-cost" type="number" placeholder="$0"/>
+            </div>
+          </div>
+          <div class="field-wrap">
+            <label class="field-label">Link (optional)</label>
+            <input class="field-input" id="af-link" placeholder="https://…"/>
+          </div>
+          <div class="field-wrap">
+            <label class="field-label">Description</label>
+            <textarea class="field-input" id="af-desc" placeholder="Tell the crew about it…"></textarea>
+          </div>
+          <button class="btn-primary" onclick="submitActivity()" style="width:100%">Add Activity</button>
+        </div>
+        <div id="activity-list"></div>
+      </div>
+    </div>
+
+    <!-- ── OVERVIEW ── -->
+    <div class="panel" id="panel-overview">
+      <div id="overview-content"></div>
+    </div>
+
+    <!-- ── ADMIN ── -->
+    <div class="panel" id="panel-admin">
+      <!-- Calendar range -->
+      <div class="card">
+        <div class="card-label">Availability Calendar Range</div>
+        <p style="font-size:.76rem;color:var(--muted);margin-bottom:12px;line-height:1.55">Set the date window your group can select availability from. Applies to everyone.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div class="field-wrap" style="margin-bottom:0">
+            <label class="field-label">Start date</label>
+            <input class="field-input" type="date" id="admin-cal-start" oninput="updateCalPreview()"/>
+          </div>
+          <div class="field-wrap" style="margin-bottom:0">
+            <label class="field-label">End date</label>
+            <input class="field-input" type="date" id="admin-cal-end" oninput="updateCalPreview()"/>
+          </div>
+        </div>
+        <div id="admin-cal-preview" style="font-size:.74rem;color:var(--muted);margin-bottom:10px;"></div>
+        <button class="btn-primary" style="width:100%" onclick="saveCalRange()">Save Calendar Range</button>
+      </div>
+
+      <!-- Trip name -->
+      <div class="sec-title">Admin</div>
+      <div class="sec-sub">Only visible to you</div>
+
+      <div class="card">
+        <div class="card-label">Trip Name</div>
+        <div class="field-wrap" style="margin-bottom:8px">
+          <input class="field-input" id="admin-trip-name" placeholder="e.g. Jake's Vegas Trip"/>
+        </div>
+        <button class="btn-primary" style="width:100%" onclick="saveAdminTripName()">Save Name</button>
+      </div>
+
+      <!-- Push to group -->
+      <div class="card">
+        <div class="card-label">Share with Group</div>
+        <p style="font-size:.76rem;color:var(--muted);margin-bottom:12px;line-height:1.55">Post a final decision and unlock the Overview tab for everyone.</p>
+        <div class="field-wrap">
+          <label class="field-label">Final Activity</label>
+          <select class="admin-select" id="admin-final-act"></select>
+        </div>
+        <div class="field-wrap">
+          <label class="field-label">Final Dates (from availability)</label>
+          <div class="final-dates-display" id="admin-final-dates" onclick="pickFinalDates()">Tap to select dates…</div>
+        </div>
+        <div class="field-wrap">
+          <label class="field-label">Message to group</label>
+          <textarea class="field-input" id="admin-push-msg" placeholder="Get ready…" style="min-height:54px"></textarea>
+        </div>
+        <button class="push-btn" id="push-btn" onclick="pushToGroup()">🚀 Push to Group</button>
+      </div>
+
+      <!-- Lock sections -->
+      <div class="card">
+        <div class="card-label">Lock Sections</div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Availability</div>
+            <div class="toggle-sublabel">Allow date selection</div>
+          </div>
+          <button class="toggle-switch on" id="lock-avail" onclick="toggleLock('avail')"></button>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Activities</div>
+            <div class="toggle-sublabel">Allow suggestions &amp; votes</div>
+          </div>
+          <button class="toggle-switch on" id="lock-acts" onclick="toggleLock('acts')"></button>
+        </div>
+      </div>
+
+      <!-- Users -->
+      <div class="card">
+        <div class="card-label">Users</div>
+        <div id="admin-user-list"></div>
+        <button class="btn-ghost" style="width:100%;margin-top:10px" onclick="openAddUserModal()">+ Add User</button>
+      </div>
+
+      <!-- Edit profiles -->
+      <div class="card">
+        <div class="card-label">Edit Profiles</div>
+        <div class="field-wrap" style="margin-bottom:8px">
+          <label class="field-label">Select user</label>
+          <select class="admin-select" id="admin-edit-user-select" onchange="loadProfileForEdit()"></select>
+        </div>
+        <div id="admin-profile-edit-area"></div>
+      </div>
+    </div>
+
+    <!-- ── PROFILE (own) ── -->
+    <div class="panel" id="panel-profile">
+      <div class="sec-title">Your Profile</div>
+      <div class="sec-sub">What the crew sees when they tap your dot</div>
+      <div class="profile-preview-card" id="profile-preview-card"></div>
+      <div class="card">
+        <div class="field-wrap">
+          <label class="field-label">City</label>
+          <input class="field-input" id="profile-city" placeholder="e.g. Austin, TX"/>
+        </div>
+        <div class="field-wrap">
+          <label class="field-label">Bio / Quote</label>
+          <textarea class="field-input" id="profile-bio" placeholder="Something memorable…"></textarea>
+        </div>
+        <div class="field-wrap">
+          <label class="field-label">Tags (comma separated)</label>
+          <input class="field-input" id="profile-tags" placeholder="🏀 NBA, 🍕 Food, 🎸 Music"/>
+        </div>
+        <button class="btn-primary" style="width:100%" onclick="saveProfile()">Save Profile ✓</button>
+      </div>
+      <button class="btn-ghost" style="width:100%;margin-top:4px" onclick="switchTab('home', document.querySelector('[data-tab=home]'))">← Back to Home</button>
+    </div>
+
+  </div><!-- /panels -->
+</div><!-- /view-app -->
+
+<!-- Sync status bar -->
+<div class="sync-bar" id="sync-bar">
+  <div class="sync-dot synced" id="sync-dot"></div>
+  <span class="sync-msg" id="sync-msg">Synced with Google Sheets</span>
+</div>
+
+<!-- ── ADD USER MODAL ── -->
+<div class="modal-overlay" id="modal-add-user">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add User</div>
+    <div class="modal-sub">They'll be able to log in with these credentials</div>
+    <div class="field-wrap">
+      <label class="field-label">Name</label>
+      <input class="field-input" id="new-user-name" placeholder="First name"/>
+    </div>
+    <div class="field-wrap">
+      <label class="field-label">Password</label>
+      <input class="field-input" id="new-user-pass" placeholder="Choose a password" type="password"/>
+    </div>
+    <div class="field-wrap">
+      <label class="field-label">Role</label>
+      <select class="field-input" id="new-user-role">
+        <option value="guest">Guest</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="btn-ghost" style="flex:1" onclick="closeModal('modal-add-user')">Cancel</button>
+      <button class="btn-primary" style="flex:2" onclick="addUser()">Add User</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DATE PICKER MODAL ── -->
+<div class="modal-overlay" id="modal-date-pick">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Pick Final Dates</div>
+    <div class="modal-sub">Choose from submitted availability ranges</div>
+    <div id="modal-date-list"></div>
+    <div style="margin-top:4px;">
+      <button class="btn-ghost" style="width:100%" onclick="closeModal('modal-date-pick')">Close</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  ██████╗ ██████╗ ███╗   ██╗███████╗██╗ ██████╗
+//  ██╔════╝██╔═══██╗████╗  ██║██╔════╝██║██╔════╝
+//  ██║     ██║   ██║██╔██╗ ██║█████╗  ██║██║  ███╗
+//  ██║     ██║   ██║██║╚██╗██║██╔══╝  ██║██║   ██║
+//  ╚██████╗╚██████╔╝██║ ╚████║██║     ██║╚██████╔╝
+//   ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝     ╚═╝ ╚═════╝
+// ═══════════════════════════════════════════════════════
+
+// ── CONSTANTS ──────────────────────────────────────────
+const CATEGORIES = [
+  "🍻 Bar/Nightlife","🎳 Games","🌊 Outdoors","🏎️ Racing/Adventure",
+  "🎰 Casino","🍽️ Dining","🎵 Music/Concert","✈️ Travel","🏖️ Beach","🎭 Experience","Other"
+];
+const USER_COLORS = ['#ffffff','#aaaaaa','#777777','#555555','#3a3a3a','#2a2a2a','#1e1e1e','#161616'];
+const RANGE_COLORS = ['#fff','#aaa','#777','#555','#3a3a3a'];
+const RANGE_FG     = ['#0c0c0c','#0c0c0c','#0c0c0c','#efefef','#c8c8c8'];
+
+// City → approximate [x%, y%] on the SVG map (0-100 scale)
+const CITY_COORDS = {
+  // Northeast
+  "new york":     [79,31], "new york, ny":[79,31], "nyc":[79,31],
+  "boston":       [83,25], "boston, ma":  [83,25],
+  "philadelphia": [78,35], "philadelphia, pa":[78,35],
+  "washington":   [77,40], "washington, dc":[77,40], "dc":[77,40],
+  "baltimore":    [78,38], "baltimore, md":[78,38],
+  "pittsburgh":   [72,35], "pittsburgh, pa":[72,35],
+  // Southeast
+  "miami":        [72,85], "miami, fl":   [72,85],
+  "orlando":      [70,76], "orlando, fl": [70,76],
+  "atlanta":      [65,62], "atlanta, ga": [65,62],
+  "charlotte":    [70,52], "charlotte, nc":[70,52],
+  "nashville":    [63,52], "nashville, tn":[63,52],
+  "memphis":      [59,56], "memphis, tn": [59,56],
+  "new orleans":  [58,72], "new orleans, la":[58,72],
+  // Midwest
+  "chicago":      [57,30], "chicago, il": [57,30],
+  "detroit":      [63,27], "detroit, mi": [63,27],
+  "cleveland":    [68,29], "cleveland, oh":[68,29],
+  "indianapolis": [62,36], "indianapolis, in":[62,36],
+  "columbus":     [67,34], "columbus, oh":[67,34],
+  "milwaukee":    [56,26], "milwaukee, wi":[56,26],
+  "minneapolis":  [50,20], "minneapolis, mn":[50,20],
+  "kansas city":  [50,42], "kansas city, mo":[50,42],
+  "st. louis":    [56,42], "st. louis, mo":[56,42],
+  "omaha":        [45,35], "omaha, ne":   [45,35],
+  // Southwest
+  "dallas":       [48,62], "dallas, tx":  [48,62],
+  "houston":      [49,70], "houston, tx": [49,70],
+  "austin":       [46,67], "austin, tx":  [46,67],
+  "san antonio":  [45,72], "san antonio, tx":[45,72],
+  "phoenix":      [25,61], "phoenix, az": [25,61],
+  "tucson":       [24,67], "tucson, az":  [24,67],
+  "albuquerque":  [31,56], "albuquerque, nm":[31,56],
+  "las vegas":    [19,55], "las vegas, nv":[19,55],
+  "denver":       [36,43], "denver, co":  [36,43],
+  "salt lake city":[25,40],"salt lake city, ut":[25,40],
+  // West
+  "los angeles":  [13,65], "los angeles, ca":[13,65], "la":[13,65],
+  "san francisco":[9,52],  "san francisco, ca":[9,52], "sf":[9,52],
+  "san diego":    [14,68], "san diego, ca":[14,68],
+  "seattle":      [11,17], "seattle, wa": [11,17],
+  "portland":     [11,22], "portland, or":[11,22],
+  "sacramento":   [10,50], "sacramento, ca":[10,50],
+};
+
+function getCityCoords(city) {
+  if (!city) return null;
+  const key = city.trim().toLowerCase();
+  if (CITY_COORDS[key]) return CITY_COORDS[key];
+  // partial match
+  for (const [k,v] of Object.entries(CITY_COORDS)) {
+    if (key.includes(k) || k.includes(key.split(',')[0].trim())) return v;
+  }
+  return null;
+}
+
+// ── DEFAULT DATA ────────────────────────────────────────
+const DEFAULT_STATE = {
+  tripName: "Party Planner",
+  users: [
+    { name:"Jake",   password:"jake123",  role:"admin",
+      city:"Austin, TX", bio:"Organized chaos. I planned this whole thing so someone better show up.",
+      tags:["🎯 Organizer","🏀 NBA","🍕 Food"] },
+    { name:"Tyler",  password:"tyler456", role:"guest",
+      city:"Nashville, TN", bio:"Best man duties in full effect. I'll handle the research, you handle the chaos.",
+      tags:["🎸 Music","🏈 NFL","🍺 Craft beer"] },
+    { name:"Marcus", password:"marc789",  role:"guest",
+      city:"Chicago, IL", bio:"Arriving from the Windy City ready to cause problems.",
+      tags:["🏒 Hockey","🎮 Gaming","🌮 Tacos"] },
+    { name:"Devon",  password:"dev000",   role:"guest",
+      city:"New York, NY", bio:"NYC native. I'll find us the best spots wherever we end up.",
+      tags:["🗽 NYC","🎭 Culture","📸 Photos"] },
+  ],
+  activities: [
+    { id:1, name:"Vegas Weekend", category:"🎰 Casino",
+      desc:"3 nights on the Strip. Bottle service, poker, pool parties. The classic.",
+      cost:800, link:"", addedBy:"Jake",
+      votes:{ Jake:5, Tyler:4, Marcus:3 }, comments:[{ author:"Tyler", text:"I know a guy at Aria who can get us a suite deal 🙏" }] },
+    { id:2, name:"Nashville Weekend", category:"🍻 Bar/Nightlife",
+      desc:"Honky-tonks, live music, incredible food. A growing tradition for bach parties.",
+      cost:400, link:"", addedBy:"Tyler",
+      votes:{ Tyler:4, Jake:4, Devon:3 }, comments:[{ author:"Marcus", text:"Broadway Street goes HARD 🤠" }] },
+    { id:3, name:"Cabo Trip", category:"✈️ Travel",
+      desc:"All-inclusive resort in Cabo. Open bar, beach, ATV tours available.",
+      cost:1200, link:"", addedBy:"Devon",
+      votes:{ Devon:5, Tyler:5 }, comments:[] },
+    { id:4, name:"Paintball + Brewery Crawl", category:"🎳 Games",
+      desc:"Morning paintball war, afternoon craft brewery tour. Low-key but legendary.",
+      cost:150, link:"", addedBy:"Marcus",
+      votes:{ Marcus:5, Devon:4, Jake:3 }, comments:[{ author:"Jake", text:"This actually sounds amazing lol" }] },
+  ],
+  availability: {}, // { userName: { ranges:[{start,end}], ranked:[idx order] } }
+  userVotes: {},    // { userName: { actId: rating } }
+  locks: { avail: false, acts: false },
+  pushed: false,
+  pushData: { actId: null, dates: "", message: "" },
+  calStart: "2026-04-01",  // admin-configurable calendar start date
+  calEnd:   "2026-07-18",  // admin-configurable calendar end date
+};
+
+// ── STATE ───────────────────────────────────────────────
+let S;
+let currentUser = null;
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem('pp_state_v3');
+    if (raw) {
+      const saved = JSON.parse(raw);
+      // merge carefully to preserve defaults for missing keys
+      S = { ...DEFAULT_STATE, ...saved };
+      S.locks    = { ...DEFAULT_STATE.locks,    ...(saved.locks    ||{}) };
+      S.pushData = { ...DEFAULT_STATE.pushData, ...(saved.pushData ||{}) };
+      S.calStart = saved.calStart || DEFAULT_STATE.calStart;
+      S.calEnd   = saved.calEnd   || DEFAULT_STATE.calEnd;
+    } else {
+      S = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    }
+  } catch(e) {
+    S = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  }
+}
+function saveState() {
+  try { localStorage.setItem('pp_state_v3', JSON.stringify(S)); } catch(e){}
+}
+
+// ── AUTH ────────────────────────────────────────────────
+function doLogin() {
+  const name = document.getElementById('inp-name').value.trim();
+  const pass = document.getElementById('inp-pass').value;
+  const user = S.users.find(u => u.name.toLowerCase() === name.toLowerCase() && u.password === pass);
+  if (!user) {
+    document.getElementById('login-error').textContent = 'Wrong name or password.';
+    return;
+  }
+  currentUser = user;
+  document.getElementById('login-error').textContent = '';
+  document.getElementById('view-login').classList.remove('active');
+  document.getElementById('view-app').classList.add('active');
+  // setup topbar
+  document.getElementById('topbar-title').textContent = S.tripName;
+  document.getElementById('tb-avatar').textContent = user.name[0];
+  document.getElementById('tb-admin').style.display = user.role === 'admin' ? '' : 'none';
+  // show/hide tabs
+  const overviewTab = document.getElementById('tab-overview-btn');
+  const adminTab    = document.getElementById('tab-admin-btn');
+  overviewTab.style.display = (user.role === 'admin' || S.pushed) ? '' : 'none';
+  adminTab.style.display    = user.role === 'admin' ? '' : 'none';
+  // populate selects
+  populateCatSelect();
+  populateAdminSelects();
+  // render home
+  switchTab('home', document.querySelector('[data-tab="home"]'));
+}
+function doLogout() {
+  currentUser = null;
+  document.getElementById('view-app').classList.remove('active');
+  document.getElementById('view-login').classList.add('active');
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-pass').value = '';
+}
+document.getElementById('inp-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('inp-name').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('inp-pass').focus(); });
+
+// ── TABS ────────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name)?.classList.add('active');
+  if (name==='home')         renderHome();
+  if (name==='availability') renderAvailability();
+  if (name==='activities')   renderActivities();
+  if (name==='overview')     renderOverview();
+  if (name==='admin')        renderAdmin();
+  if (name==='profile')      renderProfileEdit();
+}
+
+// ═══════════════════════════════════════════════════════
+//  HOME / MAP
+// ═══════════════════════════════════════════════════════
+let activeBioUser = null;
+
+function renderHome() {
+  document.getElementById('home-title').textContent = `Hey ${currentUser.name} 👋`;
+  document.getElementById('home-sub').textContent = `${S.users.length} people · tap a dot to see who's coming from where`;
+  renderMap();
+  renderCrewStrip();
+}
+
+function renderMap() {
+  const pins = document.getElementById('map-pins');
+  const conn = document.getElementById('map-connectors');
+  const svgEl = document.getElementById('map-svg');
+  pins.innerHTML = '';
+  conn.innerHTML = '';
+
+  const coords = [];
+  S.users.forEach((u, i) => {
+    const xy = getCityCoords(u.city);
+    if (!xy) return;
+    const col = USER_COLORS[i % USER_COLORS.length];
+    coords.push({ u, i, xy, col });
+
+    // pin div
+    const pin = document.createElement('div');
+    pin.className = 'map-pin';
+    pin.style.left = xy[0] + '%';
+    pin.style.top  = xy[1] + '%';
+    pin.dataset.idx = i;
+    pin.innerHTML = `
+      <div class="map-pin-pulse" style="background:${col}"></div>
+      <div class="map-pin-dot" style="background:${col}"></div>
+    `;
+    pin.addEventListener('click', (e) => { e.stopPropagation(); showBio(u, i, xy); });
+    pins.appendChild(pin);
+  });
+
+  // connector lines between all pins (very subtle)
+  for (let a = 0; a < coords.length; a++) {
+    for (let b = a+1; b < coords.length; b++) {
+      const ax = coords[a].xy[0], ay = coords[a].xy[1];
+      const bx = coords[b].xy[0], by = coords[b].xy[1];
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1', ax+'%'); line.setAttribute('y1', ay+'%');
+      line.setAttribute('x2', bx+'%'); line.setAttribute('y2', by+'%');
+      line.setAttribute('stroke','#1e1e1e'); line.setAttribute('stroke-width','0.8');
+      line.setAttribute('stroke-dasharray','3,4');
+      conn.appendChild(line);
+    }
+  }
+
+  // close popup on outside click
+  document.getElementById('map-outer').addEventListener('click', () => {
+    document.getElementById('bio-popup').style.display = 'none';
+    activeBioUser = null;
+  });
+}
+
+function showBio(user, idx, xy) {
+  if (activeBioUser === user.name) {
+    document.getElementById('bio-popup').style.display = 'none';
+    activeBioUser = null;
+    return;
+  }
+  activeBioUser = user.name;
+  const popup = document.getElementById('bio-popup');
+  const col = USER_COLORS[idx % USER_COLORS.length];
+  const fg  = idx < 3 ? '#0c0c0c' : '#efefef';
+  const isSelf = user.name === currentUser.name;
+  const tagsHtml = (user.tags||[]).map(t=>`<span class="bio-tag">${esc(t)}</span>`).join('');
+  popup.innerHTML = `
+    <div class="bio-popup-head">
+      <div class="bio-av" style="background:${col};color:${fg}">${user.name[0]}</div>
+      <div>
+        <div class="bio-name">${esc(user.name)}${isSelf?' <span style="font-size:.6rem;font-weight:400;color:var(--muted)">(you)</span>':''}</div>
+        <div class="bio-city">📍 ${esc(user.city||'No city set')}</div>
+      </div>
+    </div>
+    ${user.bio ? `<div class="bio-quote">"${esc(user.bio)}"</div>` : '<div class="bio-quote" style="color:var(--muted2);font-style:normal">No bio yet</div>'}
+    <div class="bio-tags">${tagsHtml}</div>
+    ${isSelf ? `<a class="bio-edit-link" href="#" onclick="switchTab('profile', null);return false;">✏️ Edit your profile</a>` : ''}
+  `;
+  popup.style.display = 'block';
+
+  // position popup: try above/below the pin
+  const outer = document.getElementById('map-outer');
+  const ow = outer.offsetWidth, oh = outer.offsetHeight;
+  const px = xy[0]/100 * ow;
+  const py = xy[1]/100 * oh;
+  const popW = 168, popH = 180;
+  let left = px - popW/2;
+  let top  = py - popH - 16;
+  if (top < 4) top = py + 16;
+  if (left < 4) left = 4;
+  if (left + popW > ow - 4) left = ow - popW - 4;
+  popup.style.left = left + 'px';
+  popup.style.top  = top  + 'px';
+  popup.style.display = 'block';
+}
+
+function renderCrewStrip() {
+  const strip = document.getElementById('crew-strip');
+  strip.innerHTML = '';
+  S.users.forEach((u, i) => {
+    const col = USER_COLORS[i % USER_COLORS.length];
+    const chip = document.createElement('div');
+    chip.className = 'crew-chip';
+    chip.innerHTML = `
+      <div class="crew-chip-dot" style="background:${col}"></div>
+      <span class="crew-chip-name">${esc(u.name)}</span>
+      <span class="crew-chip-city">${esc(u.city||'?')}</span>
+    `;
+    chip.addEventListener('click', () => {
+      const xy = getCityCoords(u.city);
+      if (xy) showBio(u, i, xy);
+    });
+    strip.appendChild(chip);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  PROFILE EDIT
+// ═══════════════════════════════════════════════════════
+function renderProfileEdit() {
+  const u = currentUser;
+  const idx = S.users.findIndex(x => x.name === u.name);
+  const col = USER_COLORS[idx % USER_COLORS.length];
+  const fg  = idx < 3 ? '#0c0c0c' : '#efefef';
+  document.getElementById('profile-preview-card').innerHTML = `
+    <div class="profile-av-lg" style="background:${col};color:${fg}">${u.name[0]}</div>
+    <div>
+      <div style="font-size:.95rem;font-weight:600;color:var(--white)">${esc(u.name)}</div>
+      <div style="font-size:.74rem;color:var(--muted);margin-top:2px">${esc(u.city||'No city set')}</div>
+    </div>`;
+  document.getElementById('profile-city').value = u.city || '';
+  document.getElementById('profile-bio').value  = u.bio  || '';
+  document.getElementById('profile-tags').value = (u.tags||[]).join(', ');
+}
+
+function saveProfile() {
+  const idx = S.users.findIndex(u => u.name === currentUser.name);
+  S.users[idx].city = document.getElementById('profile-city').value.trim();
+  S.users[idx].bio  = document.getElementById('profile-bio').value.trim();
+  S.users[idx].tags = document.getElementById('profile-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  currentUser = S.users[idx];
+  saveState();
+  switchTab('home', document.querySelector('[data-tab="home"]'));
+}
+
+// ═══════════════════════════════════════════════════════
+//  AVAILABILITY
+// ═══════════════════════════════════════════════════════
+// Calendar range — driven by S.calStart / S.calEnd (set in Admin panel)
+// These getters always read the live state so admin changes take effect immediately
+function getCalStart() { return new Date((S && S.calStart) || '2026-04-01'); }
+function getCalEnd()   { return new Date((S && S.calEnd)   || '2026-07-18'); }
+
+let calYear  = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+
+function clampCal() {
+  const s = getCalStart(), e = getCalEnd();
+  if (new Date(calYear, calMonth, 1) < new Date(s.getFullYear(), s.getMonth(), 1)) {
+    calYear = s.getFullYear(); calMonth = s.getMonth();
+  }
+  if (new Date(calYear, calMonth, 1) > new Date(e.getFullYear(), e.getMonth(), 1)) {
+    calYear = e.getFullYear(); calMonth = e.getMonth();
+  }
+}
+
+let selAnchor = null; // date string "YYYY-MM-DD" of first click
+let pendingRanges = []; // [{start, end}] being built this session
+let rankMode = false;
+
+function renderAvailability() {
+  const locked = S.locks.avail;
+  document.getElementById('avail-locked').style.display  = locked ? '' : 'none';
+  document.getElementById('avail-content').style.display = locked ? 'none' : '';
+  if (locked) return;
+  clampCal(); // ensure current month is within the configured range
+
+  const userAvail = S.availability[currentUser.name];
+  document.getElementById('avail-sub').textContent = `Mark all dates you could make it — ${currentUser.name}`;
+
+  if (userAvail && userAvail.ranges && userAvail.ranges.length > 0 && !rankMode) {
+    showSavedView();
+  } else {
+    showCalScreen();
+  }
+}
+
+function showCalScreen() {
+  rankMode = false;
+  document.getElementById('rank-screen').classList.remove('active');
+  document.getElementById('avail-saved-view').style.display = 'none';
+  document.getElementById('ranges-section').style.display = '';
+  // load existing ranges into pendingRanges if editing
+  const userAvail = S.availability[currentUser.name];
+  if (userAvail && userAvail.ranges) {
+    pendingRanges = userAvail.ranges.map(r=>({...r}));
+  }
+  renderCalendar();
+  renderRangesList();
+}
+
+function showSavedView() {
+  document.getElementById('rank-screen').classList.remove('active');
+  document.getElementById('ranges-section').style.display = 'none';
+  document.getElementById('avail-saved-view').style.display = '';
+  renderSavedAvailability();
+  renderGroupOverlap();
+}
+
+function editAvailability() {
+  document.getElementById('avail-saved-view').style.display = 'none';
+  pendingRanges = [...(S.availability[currentUser.name]?.ranges||[])];
+  showCalScreen();
+}
+
+function calPrev() {
+  calMonth--;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  clampCal();
+  renderCalendar();
+}
+function calNext() {
+  calMonth++;
+  if (calMonth > 11) { calMonth=0; calYear++; }
+  clampCal();
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-month-label').textContent = MONTHS[calMonth] + ' ' + calYear;
+
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+  const dows = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  dows.forEach(d => { const el=document.createElement('div'); el.className='cal-dow'; el.textContent=d; grid.appendChild(el); });
+
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  for (let i=0;i<firstDay;i++) { const el=document.createElement('div'); el.className='cal-day other-month'; grid.appendChild(el); }
+
+  for (let d=1; d<=daysInMonth; d++) {
+    const date = new Date(calYear, calMonth, d);
+    const dateStr = toDateStr(date);
+    const el = document.createElement('div');
+    el.className = 'cal-day cur-month';
+    el.textContent = d;
+
+    const isPast = date < today;
+    const isAfterEnd = date > getCalEnd();
+    if (isPast || isAfterEnd) { el.classList.add('past'); grid.appendChild(el); continue; }
+
+    // check which range this day belongs to
+    let rangeClass = getRangeClass(dateStr);
+    if (rangeClass) el.classList.add(rangeClass);
+
+    // selection in progress
+    if (selAnchor) {
+      const anchor = new Date(selAnchor);
+      const minD = anchor < date ? anchor : date;
+      const maxD = anchor < date ? date : anchor;
+      if (dateStr === selAnchor) el.classList.add('sel-anchor');
+      else if (date > anchor && !rangeClass) el.classList.add('selecting');
+    }
+
+    if (isToday(date)) el.classList.add('today');
+
+    el.addEventListener('click', () => dayClick(dateStr));
+    grid.appendChild(el);
+  }
+}
+
+function getRangeClass(dateStr) {
+  for (let ri=0; ri<Math.min(pendingRanges.length,5); ri++) {
+    const r = pendingRanges[ri];
+    const s = r.start, e = r.end;
+    if (dateStr === s && dateStr === e) return `r${ri}-s r${ri}-e`;
+    if (dateStr === s) return `r${ri}-s`;
+    if (dateStr === e) return `r${ri}-e`;
+    if (dateStr > s && dateStr < e) return `r${ri}-m`;
+  }
+  return null;
+}
+
+function dayClick(dateStr) {
+  if (!selAnchor) {
+    // check if clicking an existing range to remove it
+    let removed = false;
+    for (let ri=0; ri<pendingRanges.length; ri++) {
+      const r = pendingRanges[ri];
+      if (dateStr >= r.start && dateStr <= r.end) {
+        pendingRanges.splice(ri, 1);
+        removed = true; break;
+      }
+    }
+    if (!removed) {
+      selAnchor = dateStr;
+    }
+  } else {
+    // complete range
+    let start = selAnchor, end = dateStr;
+    if (start > end) { const tmp=start; start=end; end=tmp; }
+    pendingRanges.push({ start, end });
+    selAnchor = null;
+  }
+  renderCalendar();
+  renderRangesList();
+}
+
+function renderRangesList() {
+  const list = document.getElementById('ranges-list');
+  list.innerHTML = '';
+  const addBtn = document.getElementById('add-range-btn');
+  const rankBtn = document.getElementById('rank-btn');
+
+  document.getElementById('ranges-count-num').textContent = pendingRanges.length > 0 ? pendingRanges.length + ' added' : '';
+  addBtn.style.display = pendingRanges.length > 0 && !selAnchor ? '' : 'none';
+  rankBtn.disabled = pendingRanges.length === 0;
+  rankBtn.textContent = pendingRanges.length === 0 ? 'Add ranges first' : (pendingRanges.length === 1 ? 'Save Availability →' : 'Rank My Availability →');
+
+  pendingRanges.forEach((r, ri) => {
+    const col = RANGE_COLORS[ri % RANGE_COLORS.length];
+    const pill = document.createElement('div');
+    pill.className = 'range-pill';
+    pill.innerHTML = `
+      <div class="rp-swatch" style="background:${col}"></div>
+      <span class="rp-dates">${fmtDate(r.start)} – ${fmtDate(r.end)}</span>
+      <span class="rp-days">${daysBetween(r.start, r.end)} days</span>
+      <button class="rp-del" onclick="removeRange(${ri})">✕</button>`;
+    list.appendChild(pill);
+  });
+}
+
+function removeRange(ri) { pendingRanges.splice(ri,1); selAnchor=null; renderCalendar(); renderRangesList(); }
+function resetSelection() { selAnchor=null; renderCalendar(); renderRangesList(); }
+
+function showRankScreen() {
+  if (pendingRanges.length === 1) { saveAvailability(); return; }
+  rankMode = true;
+  document.getElementById('ranges-section').style.display = 'none';
+  const rs = document.getElementById('rank-screen');
+  rs.classList.add('active');
+  renderRankList();
+}
+
+function renderRankList() {
+  const list = document.getElementById('rank-list');
+  list.innerHTML = '';
+  pendingRanges.forEach((r, ri) => {
+    const numCls = ['n0','n1','n2','n3','n4'][Math.min(ri,4)];
+    const item = document.createElement('div');
+    item.className = 'rank-item';
+    item.innerHTML = `
+      <div class="rank-num ${numCls}">${ri+1}</div>
+      <div style="flex:1">
+        <div class="rank-dates-main">${fmtDate(r.start)} – ${fmtDate(r.end)}</div>
+        <div class="rank-dates-sub">${daysBetween(r.start,r.end)} days${ri===0?' · Most preferred':ri===pendingRanges.length-1?' · Least preferred':''}</div>
+      </div>
+      <div class="rank-move">
+        <button class="rank-arrow" ${ri===0?'disabled':''} onclick="moveRank(${ri},-1)">▲</button>
+        <button class="rank-arrow" ${ri===pendingRanges.length-1?'disabled':''} onclick="moveRank(${ri},1)">▼</button>
+      </div>`;
+    list.appendChild(item);
+  });
+}
+
+function moveRank(ri, dir) {
+  const ni = ri + dir;
+  if (ni < 0 || ni >= pendingRanges.length) return;
+  [pendingRanges[ri], pendingRanges[ni]] = [pendingRanges[ni], pendingRanges[ri]];
+  renderRankList();
+}
+
+function saveAvailability() {
+  S.availability[currentUser.name] = { ranges: pendingRanges.map(r=>({...r})) };
+  saveState();
+  rankMode = false;
+  document.getElementById('rank-screen').classList.remove('active');
+  showSavedView();
+}
+
+function renderSavedAvailability() {
+  const userAvail = S.availability[currentUser.name];
+  const savedDiv = document.getElementById('avail-saved-ranges');
+  savedDiv.innerHTML = '';
+  document.getElementById('avail-saved-count').textContent = userAvail.ranges.length + ' range' + (userAvail.ranges.length!==1?'s':'') + ' saved';
+  const calDiv = document.createElement('div');
+  calDiv.style.marginBottom='10px';
+  // mini calendar display
+  const navRow = document.createElement('div');
+  navRow.className = 'cal-nav-row';
+  navRow.innerHTML = `<button class="cal-arrow-btn" onclick="calPrev();renderSavedAvailability()">‹</button>
+    <span class="cal-month-label" id="saved-cal-label"></span>
+    <button class="cal-arrow-btn" onclick="calNext();renderSavedAvailability()">›</button>`;
+  savedDiv.appendChild(navRow);
+  const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('saved-cal-label').textContent = MONTHS[calMonth] + ' ' + calYear;
+  const miniGrid = document.createElement('div');
+  miniGrid.className = 'cal-grid';
+  miniGrid.style.marginBottom='12px';
+  const dows=['Su','Mo','Tu','We','Th','Fr','Sa'];
+  dows.forEach(d=>{const e=document.createElement('div');e.className='cal-dow';e.textContent=d;miniGrid.appendChild(e);});
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const today=new Date();today.setHours(0,0,0,0);
+  for(let i=0;i<firstDay;i++){const e=document.createElement('div');e.className='cal-day other-month';miniGrid.appendChild(e);}
+  for(let d=1;d<=daysInMonth;d++){
+    const date=new Date(calYear,calMonth,d);
+    const ds=toDateStr(date);
+    const e=document.createElement('div');
+    e.className='cal-day cur-month';
+    e.textContent=d;
+    if(date<today||date>getCalEnd())e.classList.add('past');
+    let rc=null;
+    userAvail.ranges.forEach((r,ri)=>{
+      if(ds===r.start&&ds===r.end)rc=`r${ri}-s r${ri}-e`;
+      else if(ds===r.start)rc=`r${ri}-s`;
+      else if(ds===r.end)rc=`r${ri}-e`;
+      else if(ds>r.start&&ds<r.end)rc=`r${ri}-m`;
+    });
+    if(rc)rc.split(' ').forEach(c=>e.classList.add(c));
+    if(isToday(date))e.classList.add('today');
+    miniGrid.appendChild(e);
+  }
+  savedDiv.appendChild(miniGrid);
+}
+
+function renderGroupOverlap() {
+  const overlapList = document.getElementById('overlap-list');
+  overlapList.innerHTML = '';
+  S.users.forEach((u, ui) => {
+    const avail = S.availability[u.name];
+    if (!avail || !avail.ranges || avail.ranges.length===0) return;
+    const col = USER_COLORS[ui % USER_COLORS.length];
+    const fg  = ui < 3 ? '#0c0c0c' : '#efefef';
+    const row = document.createElement('div');
+    row.className = 'overlap-row';
+    const dotsHtml = avail.ranges.slice(0,5).map((_,ri)=>{
+      const rc = RANGE_COLORS[ri % RANGE_COLORS.length];
+      return `<div class="overlap-dot" style="background:${rc}"></div>`;
+    }).join('');
+    const topRange = avail.ranges[0];
+    const badge = topRange ? `<span style="font-size:.62rem;color:var(--muted);background:var(--card2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;">#1: ${fmtDate(topRange.start)}</span>` : '';
+    row.innerHTML = `
+      <div class="overlap-av uc-${ui%8}">${u.name[0]}</div>
+      <span class="overlap-name">${esc(u.name)}</span>
+      <div class="overlap-dots">${dotsHtml}</div>
+      ${badge}`;
+    overlapList.appendChild(row);
+  });
+  // best overlap calculation
+  const bestCard = document.getElementById('best-overlap-card');
+  const best = calcBestOverlap();
+  if (best) {
+    bestCard.innerHTML = `
+      <div class="best-overlap">
+        <div class="best-overlap-label">Best overlap</div>
+        <div class="best-overlap-val">${fmtDate(best.start)} – ${fmtDate(best.end)}</div>
+        <div class="best-overlap-sub">${best.count} of ${S.users.length} people free</div>
+      </div>`;
+  } else {
+    bestCard.innerHTML = '';
+  }
+}
+
+function calcBestOverlap() {
+  // find the date range that overlaps most users' first-ranked range
+  let best = null, bestCount = 0;
+  S.users.forEach(u => {
+    const avail = S.availability[u.name];
+    if (!avail || !avail.ranges || avail.ranges.length===0) return;
+    const r = avail.ranges[0]; // top ranked
+    let count = 0;
+    S.users.forEach(u2 => {
+      const a2 = S.availability[u2.name];
+      if (!a2 || !a2.ranges) return;
+      for (const r2 of a2.ranges) {
+        if (r2.start <= r.end && r2.end >= r.start) { count++; break; }
+      }
+    });
+    if (count > bestCount) { bestCount=count; best={...r, count}; }
+  });
+  return best;
+}
+
+// ═══════════════════════════════════════════════════════
+//  ACTIVITIES
+// ═══════════════════════════════════════════════════════
+let expandedActs = {};
+
+function populateCatSelect() {
+  const sel = document.getElementById('af-cat');
+  sel.innerHTML = '';
+  CATEGORIES.forEach(c => { const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+}
+
+function toggleAddForm() {
+  const f = document.getElementById('add-form');
+  const open = f.classList.toggle('open');
+  document.getElementById('add-act-btn').textContent = open ? '✕ Cancel' : '+ Suggest';
+}
+
+function submitActivity() {
+  const name = document.getElementById('af-name').value.trim();
+  if (!name) { document.getElementById('af-name').focus(); return; }
+  S.activities.push({
+    id: Date.now(),
+    name,
+    category: document.getElementById('af-cat').value,
+    cost: parseInt(document.getElementById('af-cost').value)||0,
+    link: document.getElementById('af-link').value.trim(),
+    desc: document.getElementById('af-desc').value.trim(),
+    addedBy: currentUser.name,
+    votes: {}, comments: []
+  });
+  document.getElementById('af-name').value='';
+  document.getElementById('af-desc').value='';
+  document.getElementById('af-cost').value='';
+  document.getElementById('af-link').value='';
+  toggleAddForm();
+  saveState();
+  renderActivities();
+}
+
+function actScore(a) {
+  const merged = {...a.votes};
+  const uv = S.userVotes[currentUser.name]||{};
+  Object.entries(S.userVotes).forEach(([u,uv2])=>{ if(uv2[a.id]) merged[u]=uv2[a.id]; });
+  const vals = Object.values(merged).filter(Boolean);
+  return vals.length ? Math.round(vals.reduce((x,y)=>x+y,0)/vals.length*10)/10 : 0;
+}
+
+function sortedActs() {
+  return [...S.activities].sort((a,b)=>actScore(b)-actScore(a));
+}
+
+function renderActivities() {
+  const locked = S.locks.acts;
+  document.getElementById('act-locked').style.display  = locked ? '' : 'none';
+  document.getElementById('act-content').style.display = locked ? 'none' : '';
+  if (locked) return;
+
+  const list = document.getElementById('activity-list');
+  list.innerHTML = '';
+  const sa = sortedActs();
+  if (sa.length===0) { list.innerHTML='<div class="empty-state"><div class="es-icon">🎉</div>No activities yet. Be the first to suggest one!</div>'; return; }
+
+  const myVotes = S.userVotes[currentUser.name]||{};
+  sa.forEach((a, idx) => {
+    const rank = idx+1;
+    const score = actScore(a);
+    const myR = myVotes[a.id]||0;
+    const isOpen = !!expandedActs[a.id];
+    const rankCls = rank===1?'r1':rank===2?'r2':rank===3?'r3':'';
+    const canDelete = currentUser.role==='admin' || a.addedBy===currentUser.name;
+    const totalVoters = new Set([...Object.keys(a.votes),...Object.keys(S.userVotes).filter(u=>S.userVotes[u][a.id])]).size;
+
+    const card = document.createElement('div');
+    card.className = 'activity-card fade-in';
+
+    const voteBtns = [1,2,3,4,5].map(n=>`<button class="vote-btn${myR===n?' sel':''}" onclick="castVote(${a.id},${n})">${n}</button>`).join('');
+    const commentsHtml = a.comments.length===0
+      ? `<div style="font-size:.76rem;color:var(--muted2);margin-bottom:8px">No comments yet</div>`
+      : a.comments.map(c=>`<div class="comment"><div class="c-av ${avatarColor(c.author)}">${c.author[0]}</div><div class="c-bub"><div class="c-auth">${esc(c.author)}</div><div class="c-txt">${esc(c.text)}</div></div></div>`).join('');
+
+    card.innerHTML = `
+      <div class="act-head" onclick="toggleAct(${a.id})">
+        <div class="act-rank-badge ${rankCls}">${rank}</div>
+        <div class="act-info">
+          <div class="act-name">${esc(a.name)}</div>
+          <div class="act-cat-cost">${esc(a.category)}${a.cost>0?' · $'+a.cost+'/person':''}</div>
+        </div>
+        <div class="act-score">${score>0?score:'—'}</div>
+        <div class="act-chev${isOpen?' open':''}">▼</div>
+      </div>
+      <div class="act-body${isOpen?' open':''}">
+        ${a.desc?`<div class="act-desc">${esc(a.desc)}</div>`:''}
+        <div class="act-meta-row">
+          ${a.cost>0?`<span class="meta-chip">💸 <strong>$${a.cost}</strong>/person</span>`:''}
+          <span class="meta-chip">👤 <strong>${esc(a.addedBy)}</strong></span>
+          <span class="meta-chip">🗳️ <strong>${totalVoters}</strong> vote${totalVoters!==1?'s':''}</span>
+          ${a.link?`<a class="meta-link" href="${esc(a.link)}" target="_blank" rel="noopener">🔗 Link</a>`:''}
+        </div>
+        <div class="vote-row">
+          <span class="vote-lbl">Your rating</span>
+          <div class="vote-btns">${voteBtns}</div>
+        </div>
+        <div class="vote-bar-wrap"><div class="vote-bar-fill" style="width:${score/5*100}%"></div></div>
+        <div class="comments-lbl">Comments</div>
+        ${commentsHtml}
+        <div class="comment-input-row">
+          <input id="ci-${a.id}" placeholder="Add a comment…" onkeydown="if(event.key==='Enter')addComment(${a.id})"/>
+          <button class="btn-icon-sm" onclick="addComment(${a.id})">→</button>
+        </div>
+        ${canDelete?`<button class="btn-danger" style="margin-top:10px" onclick="deleteAct(${a.id})">🗑 Remove</button>`:''}
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+function toggleAct(id) { expandedActs[id]=!expandedActs[id]; renderActivities(); }
+function castVote(actId, rating) {
+  if (!S.userVotes[currentUser.name]) S.userVotes[currentUser.name]={};
+  S.userVotes[currentUser.name][actId]=rating;
+  saveState(); renderActivities();
+}
+function addComment(actId) {
+  const inp = document.getElementById('ci-'+actId);
+  const text = (inp?.value||'').trim();
+  if (!text) return;
+  const act = S.activities.find(a=>a.id===actId);
+  if (act) { act.comments.push({ author: currentUser.name, text }); }
+  inp.value='';
+  saveState(); renderActivities();
+}
+function deleteAct(actId) {
+  S.activities = S.activities.filter(a=>a.id!==actId);
+  delete expandedActs[actId];
+  saveState(); renderActivities();
+}
+
+function avatarColor(name) {
+  const idx = S.users.findIndex(u=>u.name===name);
+  return idx>=0 ? `uc-${idx%8}` : 'uc-3';
+}
+
+// ═══════════════════════════════════════════════════════
+//  OVERVIEW
+// ═══════════════════════════════════════════════════════
+function renderOverview() {
+  const content = document.getElementById('overview-content');
+  const sa = sortedActs();
+  const best = calcBestOverlap();
+  const avgScore = sa.length ? Math.max(...sa.map(a=>actScore(a))).toFixed(1) : '—';
+  const usersWithAvail = Object.keys(S.availability).filter(u=>S.availability[u]?.ranges?.length>0).length;
+
+  let html = '';
+
+  // Announcement if pushed
+  if (S.pushed && S.pushData.actId) {
+    const finalAct = S.activities.find(a=>a.id===S.pushData.actId);
+    html += `<div class="announce-banner">
+      <div class="announce-eyebrow">📣 It's official</div>
+      <div class="announce-title">${finalAct ? esc(finalAct.name) : 'TBD'}</div>
+      <div class="announce-body">${esc(S.pushData.message||"The organizer has locked in the plan. Get ready.")}</div>
+      <div class="announce-chips">
+        ${S.pushData.dates?`<span class="announce-chip">📅 ${esc(S.pushData.dates)}</span>`:''}
+        ${finalAct&&finalAct.cost>0?`<span class="announce-chip">💸 ~$${finalAct.cost}/person</span>`:''}
+      </div>
+    </div>`;
+  }
+
+  // Stats
+  html += `<div class="ov-grid">
+    <div class="ov-stat"><div class="ov-val">${S.users.length}</div><div class="ov-lbl">Crew</div></div>
+    <div class="ov-stat"><div class="ov-val">${S.activities.length}</div><div class="ov-lbl">Activities</div></div>
+    <div class="ov-stat"><div class="ov-val">${usersWithAvail}/${S.users.length}</div><div class="ov-lbl">Submitted dates</div></div>
+    <div class="ov-stat"><div class="ov-val">${avgScore}</div><div class="ov-lbl">Top score</div></div>
+  </div>`;
+
+  // Top activity
+  if (sa[0]) {
+    html += `<div class="card" style="margin-bottom:10px">
+      <div class="card-label">🥇 Top Rated Activity</div>
+      <div style="font-weight:600;font-size:.92rem">${esc(sa[0].name)}</div>
+      <div style="font-size:.76rem;color:var(--muted);margin-top:2px">${esc(sa[0].category)}${sa[0].cost>0?' · $'+sa[0].cost+'/person':''} · Score ${actScore(sa[0])}/5</div>
+    </div>`;
+  }
+
+  // Best overlap
+  if (best) {
+    html += `<div class="card" style="margin-bottom:12px">
+      <div class="card-label">📅 Best Available Dates</div>
+      <div style="font-weight:600;font-size:.92rem">${fmtDate(best.start)} – ${fmtDate(best.end)}</div>
+      <div style="font-size:.76rem;color:var(--muted);margin-top:2px">${best.count} of ${S.users.length} people free</div>
+    </div>`;
+  }
+
+  // Availability heatmap (all submitted ranges)
+  html += `<div style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;color:var(--white);margin-bottom:8px">Availability Heatmap</div>`;
+  html += `<div class="card"><div id="heatmap-content"></div></div>`;
+
+  // Activities ranking
+  html += `<div style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;color:var(--white);margin:12px 0 8px">Activity Rankings</div>`;
+  sa.forEach((a,i)=>{
+    const s=actScore(a);
+    html+=`<div class="activity-card" style="margin-bottom:6px">
+      <div class="act-head" style="cursor:default">
+        <div class="act-rank-badge ${i===0?'r1':i===1?'r2':i===2?'r3':''}">${i+1}</div>
+        <div class="act-info"><div class="act-name">${esc(a.name)}</div><div class="act-cat-cost">${esc(a.category)}${a.cost>0?' · $'+a.cost+'/person':''}</div></div>
+        <div class="act-score">${s>0?s:'—'}</div>
+      </div>
+    </div>`;
+  });
+
+  content.innerHTML = html;
+
+  // Heatmap
+  const hm = document.getElementById('heatmap-content');
+  if (hm) {
+    const allRanges = [];
+    S.users.forEach(u => {
+      const avail = S.availability[u.name];
+      if (avail?.ranges) avail.ranges.forEach(r=>allRanges.push(r));
+    });
+    if (allRanges.length===0) { hm.innerHTML='<div style="font-size:.76rem;color:var(--muted2)">No availability submitted yet</div>'; return; }
+
+    // find unique date ranges submitted
+    const uniqueRanges = [];
+    S.users.forEach(u=>{
+      const avail=S.availability[u.name];
+      if(avail?.ranges) avail.ranges.forEach(r=>{
+        if(!uniqueRanges.find(x=>x.start===r.start&&x.end===r.end)) uniqueRanges.push({...r});
+      });
+    });
+    uniqueRanges.sort((a,b)=>a.start.localeCompare(b.start));
+    uniqueRanges.slice(0,10).forEach(r=>{
+      let count=0;
+      S.users.forEach(u=>{
+        const avail=S.availability[u.name];
+        if(avail?.ranges) { for(const r2 of avail.ranges) { if(r2.start<=r.end&&r2.end>=r.start){count++;break;} } }
+      });
+      const pct=S.users.length?count/S.users.length:0;
+      const col=pct>.66?'#e0e0e0':pct>.33?'#888':'#444';
+      hm.innerHTML+=`<div class="heat-row">
+        <span class="heat-lbl">${fmtDate(r.start).split(' ').slice(0,2).join(' ')}</span>
+        <div class="heat-wrap"><div class="heat-fill" style="width:${pct*100}%;background:${col}"></div></div>
+        <span class="heat-cnt">${count}/${S.users.length}</span>
+      </div>`;
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  ADMIN
+// ═══════════════════════════════════════════════════════
+function renderAdmin() {
+  document.getElementById('admin-trip-name').value = S.tripName;
+  // populate calendar range
+  document.getElementById('admin-cal-start').value = S.calStart || '2026-04-01';
+  document.getElementById('admin-cal-end').value   = S.calEnd   || '2026-07-18';
+  updateCalPreview();
+  renderAdminUserList();
+  populateAdminSelects();
+  // restore lock toggles
+  updateLockToggle('avail');
+  updateLockToggle('acts');
+  // push btn state
+  const pb = document.getElementById('push-btn');
+  if (S.pushed) { pb.textContent='✅ Pushed to group'; pb.classList.add('pushed'); }
+  else { pb.textContent='🚀 Push to Group'; pb.classList.remove('pushed'); }
+}
+
+function populateAdminSelects() {
+  // activity select
+  const as = document.getElementById('admin-final-act');
+  if (as) {
+    as.innerHTML = '<option value="">— Select activity —</option>';
+    S.activities.forEach(a => { const o=document.createElement('option'); o.value=a.id; o.textContent=a.name; as.appendChild(o); });
+    if (S.pushData.actId) as.value = S.pushData.actId;
+  }
+  // user edit select
+  const us = document.getElementById('admin-edit-user-select');
+  if (us) {
+    us.innerHTML = '';
+    S.users.forEach(u => { const o=document.createElement('option'); o.value=u.name; o.textContent=u.name+' ('+u.role+')'; us.appendChild(o); });
+    loadProfileForEdit();
+  }
+}
+
+function renderAdminUserList() {
+  const list = document.getElementById('admin-user-list');
+  if (!list) return;
+  list.innerHTML = '';
+  S.users.forEach((u, i) => {
+    const col=USER_COLORS[i%USER_COLORS.length], fg=i<3?'#0c0c0c':'#efefef';
+    const row=document.createElement('div'); row.className='user-row';
+    row.innerHTML=`
+      <div class="user-row-left">
+        <div style="width:22px;height:22px;border-radius:50%;background:${col};color:${fg};display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700;">${u.name[0]}</div>
+        ${esc(u.name)}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="user-role-badge">${u.role}</span>
+        ${S.users.length>1&&u.name!==currentUser.name?`<button class="btn-danger" style="padding:3px 8px;font-size:.65rem" onclick="removeUser('${esc(u.name)}')">✕</button>`:''}
+      </div>`;
+    list.appendChild(row);
+  });
+}
+
+function loadProfileForEdit() {
+  const sel = document.getElementById('admin-edit-user-select');
+  const area = document.getElementById('admin-profile-edit-area');
+  if (!sel||!area) return;
+  const uname = sel.value;
+  const u = S.users.find(x=>x.name===uname);
+  if (!u) return;
+  area.innerHTML = `
+    <div class="field-wrap"><label class="field-label">City</label>
+      <input class="field-input" id="admin-edit-city" value="${esc(u.city||'')}" placeholder="e.g. Austin, TX"/></div>
+    <div class="field-wrap"><label class="field-label">Bio</label>
+      <textarea class="field-input" id="admin-edit-bio" style="min-height:54px">${esc(u.bio||'')}</textarea></div>
+    <div class="field-wrap"><label class="field-label">Tags</label>
+      <input class="field-input" id="admin-edit-tags" value="${esc((u.tags||[]).join(', '))}" placeholder="🏀 NBA, 🎸 Music"/></div>
+    <button class="btn-primary" style="width:100%" onclick="saveAdminProfile('${esc(uname)}')">Save Profile</button>`;
+}
+
+function saveAdminProfile(uname) {
+  const idx = S.users.findIndex(u=>u.name===uname);
+  if (idx<0) return;
+  S.users[idx].city = document.getElementById('admin-edit-city').value.trim();
+  S.users[idx].bio  = document.getElementById('admin-edit-bio').value.trim();
+  S.users[idx].tags = document.getElementById('admin-edit-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  if (currentUser.name===uname) currentUser=S.users[idx];
+  saveState();
+  // show saved feedback
+  const btn = document.querySelector('#admin-profile-edit-area .btn-primary');
+  if (btn) { const orig=btn.textContent; btn.textContent='Saved ✓'; setTimeout(()=>btn.textContent=orig,1500); }
+}
+
+function saveCalRange() {
+  const start = document.getElementById('admin-cal-start').value;
+  const end   = document.getElementById('admin-cal-end').value;
+  if (!start || !end) { alert('Please set both a start and end date.'); return; }
+  if (start >= end)   { alert('Start date must be before end date.'); return; }
+  S.calStart = start;
+  S.calEnd   = end;
+  // Reset calendar view to start of new range
+  const s = getCalStart();
+  calYear  = s.getFullYear();
+  calMonth = s.getMonth();
+  saveState();
+  updateCalPreview();
+  const btn = event.target;
+  btn.textContent = 'Saved ✓';
+  setTimeout(() => btn.textContent = 'Save Calendar Range', 1500);
+}
+
+function updateCalPreview() {
+  const start = document.getElementById('admin-cal-start')?.value;
+  const end   = document.getElementById('admin-cal-end')?.value;
+  const el    = document.getElementById('admin-cal-preview');
+  if (!el) return;
+  if (start && end) {
+    const s   = new Date(start), e = new Date(end);
+    const months = Math.round((e - s) / (1000*60*60*24*30.4));
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    el.textContent = `${MONTHS[s.getMonth()]} ${s.getFullYear()} → ${MONTHS[e.getMonth()]} ${e.getFullYear()} · ~${months} month${months!==1?'s':''}`;
+  } else {
+    el.textContent = '';
+  }
+}
+
+function saveAdminTripName() {
+  const val = document.getElementById('admin-trip-name').value.trim();
+  if (!val) return;
+  S.tripName = val;
+  document.getElementById('topbar-title').textContent = val;
+  document.getElementById('login-trip-name').textContent = val;
+  saveState();
+  const btn=event.target; btn.textContent='Saved ✓'; setTimeout(()=>btn.textContent='Save Name',1500);
+}
+
+function toggleLock(key) {
+  S.locks[key] = !S.locks[key];
+  updateLockToggle(key);
+  saveState();
+}
+function updateLockToggle(key) {
+  const id = key==='avail'?'lock-avail':'lock-acts';
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  const unlocked = !S.locks[key];
+  btn.classList.toggle('on', unlocked);
+  btn.classList.toggle('off', !unlocked);
+}
+
+function pushToGroup() {
+  const actId = parseInt(document.getElementById('admin-final-act').value);
+  if (!actId) { alert('Please select a final activity'); return; }
+  S.pushData.actId    = actId;
+  S.pushData.dates    = document.getElementById('admin-final-dates').textContent.replace('Tap to select dates…','').trim();
+  S.pushData.message  = document.getElementById('admin-push-msg').value.trim();
+  S.pushed = true;
+  saveState();
+  // reveal overview tab for everyone
+  document.getElementById('tab-overview-btn').style.display='';
+  const pb=document.getElementById('push-btn'); pb.textContent='✅ Pushed to group'; pb.classList.add('pushed');
+}
+
+function pickFinalDates() {
+  const list = document.getElementById('modal-date-list');
+  list.innerHTML='';
+  const allRanges=[];
+  S.users.forEach(u=>{const a=S.availability[u.name];if(a?.ranges)a.ranges.forEach(r=>allRanges.push({...r,user:u.name}));});
+  if (allRanges.length===0) { list.innerHTML='<div style="color:var(--muted);font-size:.8rem;padding:10px 0">No availability submitted yet</div>'; }
+  allRanges.forEach(r=>{
+    const btn=document.createElement('button');
+    btn.className='btn-ghost'; btn.style.cssText='width:100%;margin-bottom:6px;text-align:left;';
+    btn.textContent=`${fmtDate(r.start)} – ${fmtDate(r.end)} (${r.user})`;
+    btn.onclick=()=>{
+      document.getElementById('admin-final-dates').textContent=`${fmtDate(r.start)} – ${fmtDate(r.end)}`;
+      closeModal('modal-date-pick');
+    };
+    list.appendChild(btn);
+  });
+  openModal('modal-date-pick');
+}
+
+function openAddUserModal() { openModal('modal-add-user'); }
+function addUser() {
+  const name=document.getElementById('new-user-name').value.trim();
+  const pass=document.getElementById('new-user-pass').value;
+  const role=document.getElementById('new-user-role').value;
+  if (!name||!pass) { alert('Name and password required'); return; }
+  if (S.users.find(u=>u.name.toLowerCase()===name.toLowerCase())) { alert('Name already exists'); return; }
+  S.users.push({ name, password:pass, role, city:'', bio:'', tags:[] });
+  saveState();
+  closeModal('modal-add-user');
+  renderAdminUserList();
+  populateAdminSelects();
+  document.getElementById('new-user-name').value='';
+  document.getElementById('new-user-pass').value='';
+}
+function removeUser(name) {
+  if (!confirm(`Remove ${name}?`)) return;
+  S.users = S.users.filter(u=>u.name!==name);
+  saveState();
+  renderAdminUserList();
+  populateAdminSelects();
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>{ m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); }); });
+
+// ═══════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════
+function toDateStr(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function fmtDate(s) { if(!s)return''; const [y,m,d]=s.split('-'); const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return months[parseInt(m)-1]+' '+parseInt(d); }
+function daysBetween(s,e) { return Math.round((new Date(e)-new Date(s))/(1000*60*60*24))+1; }
+function isToday(d) { const t=new Date(); return d.getDate()===t.getDate()&&d.getMonth()===t.getMonth()&&d.getFullYear()===t.getFullYear(); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ═══════════════════════════════════════════════════════
+//  GOOGLE SHEETS SYNC ENGINE
+// ═══════════════════════════════════════════════════════
+
+// Resolved at runtime — pulled from SCRIPT_URL constant or localStorage override
+let SHEETS_URL = (typeof SCRIPT_URL !== 'undefined' && SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE')
+  ? SCRIPT_URL
+  : localStorage.getItem('pp_script_url') || '';
+
+let syncPending = false;
+let syncTimer   = null;
+
+// ── Sync status UI ──────────────────────────────────────
+function setSyncStatus(state, msg) {
+  const dot  = document.getElementById('sync-dot');
+  const msgEl= document.getElementById('sync-msg');
+  const bar  = document.getElementById('sync-bar');
+  if (!dot) return;
+  dot.className  = 'sync-dot ' + state;
+  msgEl.textContent = msg;
+  bar.className = state === 'error' ? 'sync-bar error-bar' : 'sync-bar';
+}
+
+function setLoading(msg) {
+  const el = document.getElementById('loading-msg');
+  if (el) el.textContent = msg;
+}
+
+// ── Low-level call to Apps Script ──────────────────────
+async function sheetsCall(action, payload={}) {
+  if (!SHEETS_URL) throw new Error('No SCRIPT_URL configured');
+  const body = JSON.stringify({ action, ...payload });
+  const res  = await fetch(SHEETS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' }, // text/plain avoids CORS preflight
+    body,
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const json = await res.json();
+  if (json.error) throw new Error(json.error);
+  return json.data;
+}
+
+// ── Load full state from Sheets ─────────────────────────
+async function loadState() {
+  try {
+    setLoading('Loading party data…');
+    const data = await sheetsCall('getState');
+    // Merge with DEFAULT_STATE so missing keys get defaults
+    S = {
+      ...DEFAULT_STATE,
+      ...data,
+      locks:    { ...DEFAULT_STATE.locks,    ...(data.locks    || {}) },
+      pushData: { ...DEFAULT_STATE.pushData, ...(data.pushData || {}) },
+      calStart: data.calStart || DEFAULT_STATE.calStart,
+      calEnd:   data.calEnd   || DEFAULT_STATE.calEnd,
+    };
+    // Ensure users array always has at least DEFAULT users if sheet is empty
+    if (!S.users || S.users.length === 0) S.users = DEFAULT_STATE.users;
+    hideLoading();
+    initLoginScreen();
+  } catch(e) {
+    console.error('loadState error:', e);
+    setSyncStatus('error', 'Could not connect to Google Sheets');
+    // Fall back to DEFAULT_STATE so app still renders
+    S = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    hideLoading();
+    initLoginScreen();
+    setSyncStatus('error', 'Offline — changes won\'t be saved');
+  }
+}
+
+// ── Save full state to Sheets (debounced 400ms) ─────────
+function saveState() {
+  // Optimistically update UI immediately
+  if (syncTimer) clearTimeout(syncTimer);
+  setSyncStatus('syncing', 'Saving…');
+  syncTimer = setTimeout(() => pushState(), 400);
+}
+
+async function pushState() {
+  try {
+    await sheetsCall('setState', { state: S });
+    setSyncStatus('synced', 'Synced · ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+  } catch(e) {
+    console.error('pushState error:', e);
+    setSyncStatus('error', 'Sync failed — tap to retry');
+    document.getElementById('sync-bar').onclick = () => { setSyncStatus('syncing','Retrying…'); pushState(); };
+  }
+}
+
+// ── Poll for remote changes every 15 seconds ───────────
+function startPolling() {
+  setInterval(async () => {
+    if (!currentUser) return; // only poll when logged in
+    try {
+      const data = await sheetsCall('getState');
+      const incoming = {
+        ...DEFAULT_STATE, ...data,
+        locks:    { ...DEFAULT_STATE.locks,    ...(data.locks    || {}) },
+        pushData: { ...DEFAULT_STATE.pushData, ...(data.pushData || {}) },
+        calStart: data.calStart || DEFAULT_STATE.calStart,
+        calEnd:   data.calEnd   || DEFAULT_STATE.calEnd,
+      };
+      // Merge remote changes that aren't from current user
+      // Activities, comments, votes, locks, pushData always take remote
+      S.activities = incoming.activities;
+      S.userVotes  = incoming.userVotes;
+      S.locks      = incoming.locks;
+      S.pushed     = incoming.pushed;
+      S.pushData   = incoming.pushData;
+      S.tripName   = incoming.tripName;
+      S.calStart   = incoming.calStart;
+      S.calEnd     = incoming.calEnd;
+      // Merge availability for OTHER users only (keep own edits)
+      Object.keys(incoming.availability).forEach(name => {
+        if (name !== currentUser.name) S.availability[name] = incoming.availability[name];
+      });
+      // Merge user profiles for others
+      incoming.users.forEach(u => {
+        if (u.name !== currentUser.name) {
+          const idx = S.users.findIndex(x=>x.name===u.name);
+          if (idx >= 0) S.users[idx] = u; else S.users.push(u);
+        }
+      });
+      // Update UI if something changed
+      const activePanel = document.querySelector('.panel.active')?.id;
+      if (activePanel === 'panel-activities') renderActivities();
+      if (activePanel === 'panel-overview')   renderOverview();
+      if (activePanel === 'panel-home')       renderHome();
+      // Show overview tab if admin pushed
+      if (S.pushed) document.getElementById('tab-overview-btn').style.display='';
+      // Update trip name in topbar
+      document.getElementById('topbar-title').textContent = S.tripName;
+    } catch(e) {
+      // silent fail on poll — don't disrupt user
+    }
+  }, 15000);
+}
+
+// ── Config screen (if SCRIPT_URL not set) ─────────────
+function setScriptUrl() {
+  const url = document.getElementById('config-url-input').value.trim();
+  if (!url.startsWith('https://script.google.com')) {
+    alert('That doesn\'t look like a valid Apps Script URL. It should start with https://script.google.com/macros/s/');
+    return;
+  }
+  SHEETS_URL = url;
+  localStorage.setItem('pp_script_url', url);
+  document.getElementById('config-screen').style.display = 'none';
+  document.getElementById('loading-overlay').classList.remove('hidden');
+  loadState();
+}
+
+function hideLoading() {
+  document.getElementById('loading-overlay').classList.add('hidden');
+}
+
+// ── Init login screen after state loaded ───────────────
+function initLoginScreen() {
+  document.getElementById('login-trip-name').textContent  = S.tripName;
+  document.getElementById('loading-trip-name').textContent = S.tripName;
+  const hint    = document.getElementById('login-hint');
+  const admins  = S.users.filter(u=>u.role==='admin');
+  if (admins.length>0) hint.textContent = `Reach out to ${admins[0].name} if you need access`;
+  setSyncStatus('synced', 'Connected to Google Sheets');
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+
+// Check if SCRIPT_URL is configured
+if (!SHEETS_URL) {
+  document.getElementById('loading-overlay').classList.add('hidden');
+  document.getElementById('config-screen').style.display = 'flex';
+  S = JSON.parse(JSON.stringify(DEFAULT_STATE)); // safe default so app doesn't crash
+} else {
+  loadState().then(() => startPolling());
+}
+</script>
+</body>
+</html>
