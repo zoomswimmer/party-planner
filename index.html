@@ -1085,6 +1085,7 @@ select.field-input option{background:var(--card2);}
     <button class="nav-tab" data-tab="availability" onclick="switchGuestTab('availability',this)">Availability</button>
     <button class="nav-tab" data-tab="activities" onclick="switchGuestTab('activities',this)">Activities</button>
     <button class="nav-tab" id="tab-overview" data-tab="overview" onclick="switchGuestTab('overview',this)" style="display:none">Overview</button>
+    <button class="nav-tab" data-tab="profile" onclick="switchGuestTab('profile',this)">My Profile</button>
   </div>
 
   <div class="panels">
@@ -1561,7 +1562,7 @@ async function doLogin(){
 }
 
 function doLogout(){
-  currentUser=null; S=null; USERS=[]; activePartyId=DEFAULT_PARTY_ID;
+  currentUser=null; S=null; activePartyId=DEFAULT_PARTY_ID;
   if(cdInterval) clearInterval(cdInterval);
   if(adminCdInterval) clearInterval(adminCdInterval);
   document.getElementById('view-admin')?.classList.remove('active');
@@ -1569,7 +1570,10 @@ function doLogout(){
   document.getElementById('view-login').classList.add('active');
   document.getElementById('inp-name').value='';
   document.getElementById('inp-pass').value='';
+  document.getElementById('login-error').textContent='';
   document.title='Party Planner';
+  // Reload users so next login attempt has fresh data
+  loadUsers();
 }
 
 document.getElementById('inp-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
