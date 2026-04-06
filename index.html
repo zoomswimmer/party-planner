@@ -7,14 +7,16 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
 <title>Party Planner</title>
 <script>
-  // ── CONFIGURE THIS FOR EACH INSTALLATION ──────────────────
-  const SCRIPT_URL       = 'https://script.google.com/macros/s/AKfycbygywuxRCYt7uyqzdmJQuWoAjh2ajPdzLbAmJ1p2KgLPSGFEW126Ue3yPGbyyC97KvPmA/exec';
-  const DEFAULT_PARTY_ID = 'my-party';  // default tab opened on first load
-  // ──────────────────────────────────────────────────────────
+  // ── CONFIGURE FOR EACH INSTALLATION ──────────────────────────
+  const SCRIPT_URL       = 'https://script.google.com/macros/s/AKfycbxO6uHaPpNpWgfzS5YG_Y-LUYU5rsJ9zGL0tQEbKv9TqO-1OjCNgZnG1u5xJ1Pkzd5rBg/exec';
+  const DEFAULT_PARTY_ID = 'my-party';
+  // NOTE: map.jpg must be in the same folder as index.html on GitHub
+  // ─────────────────────────────────────────────────────────────
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
+
 
 /* ═══════════════════════════════════════════
    RESET & ROOT
@@ -587,10 +589,259 @@ select.field-input option{background:var(--card2);}
 .uc3{background:#555;color:#efefef;} .uc4{background:#3a3a3a;color:#c8c8c8;border:1px solid #555;}
 .uc5{background:#2a2a2a;color:#aaa;border:1px solid #444;} .uc6{background:#1e1e1e;color:#888;border:1px solid #333;}
 .uc7{background:#161616;color:#666;border:1px solid #2a2a2a;}
+
+/* ── NEW COMPONENTS ─────────────────────────────────── */
+
+/* countdown banner */
+.cd-banner{display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 14px;
+  background:#161616;border-bottom:1px solid var(--border);font-size:.68rem;color:var(--muted);
+  flex-shrink:0;}
+.cd-banner.expired{background:rgba(100,30,30,.2);border-bottom-color:#3a1a1a;}
+.cd-banner.expired .cd-time{color:#c07070;}
+.cd-time{font-weight:700;color:var(--text2);font-variant-numeric:tabular-nums;letter-spacing:.02em;}
+.cd-label{color:var(--muted2);}
+
+/* admin app shell */
+.admin-app{display:flex;flex-direction:column;height:100%;}
+.admin-nav{flex-shrink:0;display:flex;background:var(--surface);border-bottom:1px solid var(--border);}
+.admin-nav-tab{flex:1;background:transparent;border:none;border-bottom:2px solid transparent;
+  color:var(--muted);font-size:.8rem;font-weight:500;padding:12px 8px 11px;
+  font-family:var(--fb);transition:all .2s;}
+.admin-nav-tab:hover{color:var(--text2);}
+.admin-nav-tab.active{color:var(--white);border-bottom-color:var(--white);}
+.admin-panels{flex:1;overflow:hidden;position:relative;}
+.admin-panel{position:absolute;inset:0;overflow-y:auto;padding:18px 14px 60px;display:none;}
+.admin-panel.active{display:block;}
+
+/* admin page stack (events list → detail → final) */
+.apage{display:none;flex-direction:column;height:100%;}
+.apage.active{display:flex;}
+.apage-scroll{flex:1;overflow-y:auto;padding:16px 14px 60px;}
+
+/* page back header */
+.page-back-hdr{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-shrink:0;
+  padding:14px 14px 0;}
+.back-btn{background:transparent;border:1px solid var(--border2);color:var(--muted);
+  border-radius:6px;padding:5px 11px;font-size:.72rem;font-family:var(--fb);transition:all .2s;flex-shrink:0;}
+.back-btn:hover{border-color:var(--border3);color:var(--text2);}
+.page-title{font-family:var(--fd);font-size:1.35rem;color:var(--white);line-height:1.1;}
+.page-sub{font-size:.68rem;color:var(--muted);margin-top:1px;}
+
+/* event list rows */
+.event-row{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:10px;
+  border:1px solid var(--border);background:var(--card2);margin-bottom:6px;cursor:pointer;
+  transition:border-color .15s;}
+.event-row:hover{border-color:var(--border3);}
+.ev-dot{width:8px;height:8px;border-radius:50%;background:var(--white);flex-shrink:0;}
+.ev-name{flex:1;font-size:.88rem;font-weight:500;color:var(--text);}
+.ev-meta{font-size:.68rem;color:var(--muted);}
+.ev-arrow{font-size:.7rem;color:var(--muted2);}
+
+/* event detail section blocks */
+.detail-block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:14px;margin-bottom:10px;}
+.db-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.db-title{font-size:.76rem;font-weight:600;color:var(--text2);}
+.db-edit{background:transparent;border:1px solid var(--border2);color:var(--muted);
+  border-radius:6px;padding:3px 9px;font-size:.68rem;font-family:var(--fb);transition:all .15s;}
+.db-edit:hover{border-color:var(--border3);color:var(--text2);}
+
+/* master activity rows (admin) */
+.act-master-row{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--card2);
+  border:1px solid var(--border);border-radius:8px;margin-bottom:5px;}
+.amr-num{width:22px;height:22px;border-radius:50%;background:var(--surface);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-size:.64rem;font-weight:700;
+  color:var(--muted);flex-shrink:0;}
+.amr-name{flex:1;font-size:.84rem;font-weight:500;color:var(--text);}
+.amr-cost{font-size:.68rem;color:var(--muted);}
+.amr-btns{display:flex;gap:4px;}
+.amr-btn{background:transparent;border:1px solid var(--border);color:var(--muted);
+  border-radius:5px;padding:3px 7px;font-size:.64rem;font-family:var(--fb);transition:all .15s;}
+.amr-btn:hover{border-color:var(--border3);color:var(--text2);}
+.amr-btn.del:hover{border-color:rgba(180,60,60,.4);color:#a84040;}
+
+/* group stats block */
+.stat-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;
+  border-bottom:1px solid var(--border);}
+.stat-row:last-child{border-bottom:none;}
+.stat-lbl{font-size:.78rem;color:var(--muted);}
+.stat-val{font-size:.84rem;font-weight:600;color:var(--text2);}
+
+/* finalize button */
+.finalize-btn{width:100%;background:var(--white);color:#0c0c0c;border:none;border-radius:8px;
+  padding:12px;font-size:.9rem;font-weight:700;font-family:var(--fb);margin-top:4px;
+  transition:background .2s;}
+.finalize-btn:hover{background:var(--off-white);}
+
+/* final page */
+.final-section-lbl{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--muted2);margin-bottom:8px;}
+.rank-summary-row{display:flex;align-items:center;gap:9px;padding:8px 11px;background:var(--card2);
+  border:1px solid var(--border);border-radius:8px;margin-bottom:5px;}
+.rsr-rank{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:.64rem;font-weight:700;flex-shrink:0;}
+.rsr-r1{background:var(--white);color:#0c0c0c;}
+.rsr-r2{background:#777;color:#0c0c0c;}
+.rsr-r3{background:#444;color:var(--white);}
+.rsr-name{flex:1;font-size:.84rem;color:var(--text);}
+.rsr-score{font-size:.7rem;color:var(--muted);}
+
+/* users page */
+.usr-row{display:flex;align-items:flex-start;gap:9px;padding:10px 0;
+  border-bottom:1px solid var(--border);}
+.usr-row:last-child{border-bottom:none;}
+.usr-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;}
+.usr-info{flex:1;min-width:0;}
+.usr-name{font-size:.86rem;font-weight:600;color:var(--text);}
+.usr-email{font-size:.68rem;color:var(--muted);margin-top:1px;}
+.usr-events{font-size:.64rem;color:var(--muted2);margin-top:2px;}
+.usr-actions{display:flex;gap:5px;flex-shrink:0;align-items:center;}
+.usr-btn{background:transparent;border:1px solid var(--border);color:var(--muted);
+  border-radius:6px;padding:4px 9px;font-size:.66rem;font-family:var(--fb);transition:all .15s;}
+.usr-btn:hover{border-color:var(--border3);color:var(--text2);}
+.usr-btn.invite:hover{border-color:rgba(90,158,111,.5);color:#5a9e6f;}
+.copy-link-btn{width:100%;background:var(--card2);border:1px solid var(--border2);color:var(--muted);
+  border-radius:8px;padding:9px;font-size:.78rem;font-family:var(--fb);margin-top:8px;
+  display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s;}
+.copy-link-btn:hover{border-color:var(--border3);color:var(--text2);}
+.copy-link-btn.copied{border-color:rgba(90,158,111,.4);color:#5a9e6f;}
+
+/* participant: activity rank cards */
+.act-rank-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  margin-bottom:7px;overflow:hidden;transition:border-color .2s;}
+.act-rank-card:hover{border-color:var(--border3);}
+.act-rank-card.new-act{border-style:dashed;border-color:rgba(200,168,75,.3);}
+.arc-head{display:flex;align-items:center;gap:9px;padding:11px 12px;cursor:pointer;user-select:none;}
+.arc-rank{width:25px;height:25px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0;border:1px solid transparent;}
+.arc-r1{background:var(--white);color:#0c0c0c;}
+.arc-r2{background:#777;color:#0c0c0c;}
+.arc-r3{background:#444;color:var(--white);}
+.arc-r4{background:var(--card2);color:var(--muted);border-color:var(--border2);}
+.arc-info{flex:1;min-width:0;}
+.arc-name{font-size:.86rem;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.arc-meta{font-size:.68rem;color:var(--muted);margin-top:1px;}
+.arc-new-badge{font-size:.6rem;background:rgba(200,168,75,.12);color:#c8a84b;
+  border:1px solid rgba(200,168,75,.25);border-radius:20px;padding:1px 6px;white-space:nowrap;}
+.arc-arrows{display:flex;flex-direction:column;gap:2px;}
+.arc-arrow{width:22px;height:16px;background:var(--card2);border:1px solid var(--border);
+  border-radius:3px;color:var(--muted);font-size:.54rem;display:flex;align-items:center;
+  justify-content:center;transition:all .15s;}
+.arc-arrow:hover{background:var(--border2);color:var(--text2);}
+.arc-arrow:disabled{opacity:.2;cursor:default;}
+.arc-body{border-top:1px solid var(--border);padding:10px 12px;display:none;}
+.arc-body.open{display:block;}
+.arc-desc{font-size:.8rem;color:var(--muted);line-height:1.55;margin-bottom:9px;}
+.arc-body-meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.arc-mc{font-size:.7rem;color:var(--muted);}
+.arc-mc strong{color:var(--text2);}
+
+/* activity comments */
+.act-comments-lbl{font-size:.62rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:6px;}
+.act-comment{display:flex;gap:5px;margin-bottom:5px;}
+.ac-av{width:19px;height:19px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:.56rem;font-weight:700;flex-shrink:0;margin-top:1px;}
+.ac-bub{background:var(--surface);border-radius:7px;padding:5px 8px;flex:1;}
+.ac-auth{font-size:.62rem;font-weight:700;color:var(--text2);margin-bottom:1px;}
+.ac-txt{font-size:.78rem;color:var(--text);line-height:1.45;}
+.ac-input-row{display:flex;gap:5px;margin-top:7px;}
+.ac-input-row input{flex:1;background:var(--surface);border:1px solid var(--border);
+  border-radius:7px;padding:7px 9px;color:var(--text);font-size:.8rem;outline:none;
+  transition:border .2s;}
+.ac-input-row input:focus{border-color:var(--border3);}
+
+/* add activity form (participant) */
+.add-act-form{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:var(--r);
+  padding:14px;margin-bottom:10px;display:none;}
+.add-act-form.open{display:block;}
+
+/* countdown admin section */
+.cd-admin-live{display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:var(--card2);border:1px solid var(--border);border-radius:9px;margin-top:8px;}
+.cd-admin-time{font-family:var(--fd);font-size:1.5rem;color:var(--white);
+  font-variant-numeric:tabular-nums;}
+.cd-admin-lbl{font-size:.68rem;color:var(--muted);}
+
+/* map container */
+.map-outer{margin:0 12px;border-radius:10px;overflow:hidden;border:1px solid var(--border);
+  background:#0a0a0a;position:relative;}
+.map-img{width:100%;display:block;
+  filter:invert(1) brightness(0.25) contrast(2);}
+.map-pin{position:absolute;transform:translate(-50%,-50%);cursor:pointer;z-index:5;}
+.map-pin-dot{width:11px;height:11px;border-radius:50%;border:2px solid #0c0c0c;
+  transition:transform .15s;}
+.map-pin:hover .map-pin-dot{transform:scale(1.35);}
+.map-pin-pulse{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:22px;height:22px;border-radius:50%;opacity:0;animation:mpulse 2.4s ease-out infinite;}
+@keyframes mpulse{0%{transform:translate(-50%,-50%) scale(.5);opacity:.5;}
+  100%{transform:translate(-50%,-50%) scale(2.2);opacity:0;}}
+.bio-popup{position:absolute;z-index:20;background:var(--card);border:1px solid var(--border2);
+  border-radius:10px;padding:11px;width:164px;box-shadow:0 12px 40px rgba(0,0,0,.7);
+  animation:popIn .15s ease;}
+@keyframes popIn{from{opacity:0;transform:scale(.9);}to{opacity:1;transform:scale(1);}}
+.bio-head{display:flex;align-items:center;gap:7px;margin-bottom:6px;}
+.bio-av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0;}
+.bio-name{font-size:.82rem;font-weight:700;color:var(--white);}
+.bio-city{font-size:.64rem;color:var(--muted);}
+.bio-quote{font-size:.7rem;color:var(--muted);line-height:1.5;margin-bottom:6px;font-style:italic;}
+.bio-tags{display:flex;gap:3px;flex-wrap:wrap;}
+.bio-tag{font-size:.58rem;background:var(--card2);border:1px solid var(--border);
+  border-radius:20px;padding:2px 6px;color:var(--muted);}
+.bio-edit{display:block;margin-top:7px;padding-top:6px;border-top:1px solid var(--border);
+  font-size:.63rem;color:var(--muted);text-align:center;}
+.bio-edit:hover{color:var(--text2);}
+.crew-strip{display:flex;gap:5px;padding:8px 12px;overflow-x:auto;border-top:1px solid var(--border);}
+.crew-strip::-webkit-scrollbar{display:none;}
+.crew-chip{display:flex;align-items:center;gap:5px;background:var(--card);
+  border:1px solid var(--border);border-radius:20px;padding:4px 9px;flex-shrink:0;
+  cursor:pointer;transition:border-color .15s;}
+.crew-chip:hover{border-color:var(--border3);}
+.crew-cdot{width:6px;height:6px;border-radius:50%;}
+.crew-cname{font-size:.7rem;color:var(--text);}
+.crew-ccity{font-size:.62rem;color:var(--muted);}
+.home-nav-row{display:flex;gap:7px;padding:9px 12px 12px;border-top:1px solid var(--border);}
+.hnb{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:8px 5px;text-align:center;font-size:.7rem;color:var(--muted);transition:all .2s;}
+.hnb:hover{border-color:var(--border3);color:var(--text2);}
+.hnb.hnb-p{background:var(--white);color:#0c0c0c;border-color:var(--white);font-weight:600;}
+.hnb.hnb-p:hover{background:var(--off-white);}
+
+/* overview announcement */
+.ann-banner{background:var(--white);color:#0c0c0c;border-radius:var(--r);
+  padding:14px;margin-bottom:11px;}
+.ann-ey{font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:#555;margin-bottom:3px;}
+.ann-title{font-family:var(--fd);font-size:1.35rem;font-weight:700;color:#0c0c0c;margin-bottom:3px;}
+.ann-body{font-size:.76rem;color:#444;line-height:1.5;}
+.ann-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px;}
+.ann-chip{font-size:.66rem;background:#ececec;border-radius:20px;padding:3px 8px;color:#444;}
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:11px;}
+.ov-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:12px;text-align:center;}
+.ov-val{font-family:var(--fd);font-size:1.9rem;font-weight:700;color:var(--white);line-height:1;}
+.ov-lbl{font-size:.6rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-top:3px;}
+.heat-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.heat-lbl{font-size:.68rem;color:var(--muted);width:78px;flex-shrink:0;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;}
+.heat-wrap{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.heat-fill{height:100%;border-radius:3px;transition:width .5s;}
+.heat-cnt{font-size:.62rem;color:var(--muted);width:24px;text-align:right;flex-shrink:0;}
+
+/* user colors */
+.uc0{background:#fff;color:#0c0c0c;} .uc1{background:#aaa;color:#0c0c0c;}
+.uc2{background:#777;color:#0c0c0c;} .uc3{background:#555;color:#efefef;}
+.uc4{background:#3a3a3a;color:#c8c8c8;border:1px solid #555;}
+.uc5{background:#2a2a2a;color:#aaa;border:1px solid #444;}
+.uc6{background:#1e1e1e;color:#888;border:1px solid #333;}
+.uc7{background:#161616;color:#666;border:1px solid #2a2a2a;}
 </style>
 </head>
 <body>
 
+<!-- Loading overlay -->
 <div class="loading-overlay" id="loading-overlay">
   <div class="loading-spinner"></div>
   <div class="loading-title" id="loading-trip-name">Party Planner</div>
@@ -599,12 +850,12 @@ select.field-input option{background:var(--card2);}
 
 <div id="app">
 
-<!-- LOGIN -->
+<!-- ═══════════════ LOGIN ═══════════════ -->
 <div id="view-login" class="view active">
   <div class="login-box">
     <div class="login-eyebrow">Welcome</div>
-    <div class="login-title" id="login-trip-name">Party Planner</div>
-    <div class="login-sub">Sign in to start planning</div>
+    <div class="login-title" id="login-title">Party Planner</div>
+    <div class="login-sub">Sign in to continue</div>
     <label class="login-label">Your name</label>
     <input class="login-input" id="inp-name" type="text" placeholder="Enter your name" autocomplete="off"/>
     <label class="login-label">Password</label>
@@ -615,30 +866,225 @@ select.field-input option{background:var(--card2);}
   </div>
 </div>
 
-<!-- APP -->
-<div id="view-app" class="view">
+<!-- ═══════════════ ADMIN APP ═══════════════ -->
+<div id="view-admin" class="view">
+  <div class="topbar">
+    <span class="topbar-title" id="admin-topbar-title">Party Planner</span>
+    <div class="topbar-right">
+      <span class="tb-admin">Admin</span>
+      <div class="tb-avatar" id="admin-avatar">A</div>
+      <button class="tb-signout" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
 
+  <!-- Admin page stack: events-list, create-event, event-detail, final-page -->
+  <!-- Events List Page -->
+  <div class="apage active" id="apage-events">
+    <div class="admin-app" style="height:100%">
+      <div class="admin-nav">
+        <button class="admin-nav-tab active" id="atab-events" onclick="switchAdminTab('events')">Events</button>
+        <button class="admin-nav-tab" id="atab-users" onclick="switchAdminTab('users')">Users</button>
+      </div>
+      <div class="admin-panels">
+        <!-- EVENTS TAB -->
+        <div class="admin-panel active" id="apanel-events">
+          <div class="sec-title">Events</div>
+          <div class="sec-sub">Select an event to manage it</div>
+          <div id="admin-event-list"></div>
+          <button class="btn-g" style="width:100%;margin-top:4px" onclick="showPage('apage-create')">+ Create New Event</button>
+        </div>
+        <!-- USERS TAB -->
+        <div class="admin-panel" id="apanel-users">
+          <div class="sec-title">Users</div>
+          <div class="sec-sub">Manage everyone across all events</div>
+          <button class="copy-link-btn" id="copy-link-btn" onclick="copyAppLink()">&#128279; Copy App Link</button>
+          <div class="card" style="margin-top:10px">
+            <div class="card-label">All Users</div>
+            <div id="admin-user-list"></div>
+            <button class="btn-g" style="width:100%;margin-top:10px" onclick="openModal('modal-add-user')">+ Add User</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Event Page -->
+  <div class="apage" id="apage-create">
+    <div class="page-back-hdr">
+      <button class="back-btn" onclick="showPage('apage-events')">&#8592; Events</button>
+      <div><div class="page-title">New Event</div></div>
+    </div>
+    <div style="padding:0 14px 60px;overflow-y:auto;flex:1">
+      <div class="card">
+        <div class="card-label">Event Details</div>
+        <div class="fl">
+          <label class="fl-label">Event ID</label>
+          <input class="fi" id="create-party-id" placeholder="e.g. mikes-bachelor" oninput="sanitizePartyId(this)"/>
+          <div style="font-size:.64rem;color:var(--muted2);margin-top:-4px;margin-bottom:10px;line-height:1.5">Lowercase letters, numbers and hyphens only. Cannot be changed later.</div>
+        </div>
+        <div class="fl">
+          <label class="fl-label">Event Name</label>
+          <input class="fi" id="create-event-name" placeholder="e.g. Mike's Bachelor Trip"/>
+        </div>
+      </div>
+      <button class="btn-p" style="width:100%;margin-top:4px" onclick="createEvent()">Create Event &#8594;</button>
+    </div>
+  </div>
+
+  <!-- Event Detail Page -->
+  <div class="apage" id="apage-detail">
+    <div class="page-back-hdr" style="padding-bottom:4px">
+      <button class="back-btn" onclick="showPage('apage-events');loadPartyIds()">&#8592; Events</button>
+      <div>
+        <div class="page-title" id="detail-event-name">Event</div>
+        <div class="page-sub" id="detail-event-id"></div>
+      </div>
+    </div>
+    <div style="padding:0 14px 60px;overflow-y:auto;flex:1" id="detail-scroll">
+
+      <!-- Calendar Range -->
+      <div class="detail-block">
+        <div class="db-hdr">
+          <div class="db-title">&#128197; Availability Calendar Range</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div class="fl" style="margin-bottom:0"><label class="fl-label">Start</label><input class="fi" type="date" id="detail-cal-start" oninput="updateCalPreview()"/></div>
+          <div class="fl" style="margin-bottom:0"><label class="fl-label">End</label><input class="fi" type="date" id="detail-cal-end" oninput="updateCalPreview()"/></div>
+        </div>
+        <div id="detail-cal-preview" style="font-size:.72rem;color:var(--muted);margin-bottom:8px"></div>
+        <button class="btn-p" style="width:100%" onclick="saveCalRange()">Save Range</button>
+      </div>
+
+      <!-- Users / Party Access -->
+      <div class="detail-block">
+        <div class="db-hdr">
+          <div class="db-title">&#128101; Users / Party Access</div>
+          <button class="db-edit" onclick="openModal('modal-party-access')">Edit</button>
+        </div>
+        <div id="detail-users-chips" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+      </div>
+
+      <!-- Countdown Timer -->
+      <div class="detail-block">
+        <div class="db-hdr"><div class="db-title">&#9201; Countdown Timer</div></div>
+        <div class="fl" style="margin-bottom:8px">
+          <label class="fl-label">Deadline (date &amp; time)</label>
+          <input class="fi" type="datetime-local" id="detail-deadline"/>
+        </div>
+        <div class="cd-admin-live" id="detail-cd-live" style="display:none">
+          <div>
+            <div class="cd-admin-time" id="detail-cd-time">--d --h --m --s</div>
+            <div class="cd-admin-lbl">Showing live on participant pages</div>
+          </div>
+        </div>
+        <button class="btn-p" style="width:100%;margin-top:8px" onclick="saveDeadline()">Save Deadline</button>
+      </div>
+
+      <!-- Lock Sections -->
+      <div class="detail-block">
+        <div class="db-hdr"><div class="db-title">&#128274; Lock Sections</div></div>
+        <div class="tog-row">
+          <div><div class="tog-lbl">Availability</div><div class="tog-sub">Allow date selection</div></div>
+          <button class="toggle-sw on" id="lock-avail" onclick="toggleLock('avail')"></button>
+        </div>
+        <div class="tog-row">
+          <div><div class="tog-lbl">Activities</div><div class="tog-sub">Allow suggestions &amp; ranking</div></div>
+          <button class="toggle-sw on" id="lock-acts" onclick="toggleLock('acts')"></button>
+        </div>
+      </div>
+
+      <!-- Activities (master) -->
+      <div class="detail-block">
+        <div class="db-hdr">
+          <div class="db-title">&#127881; Activities</div>
+          <button class="db-edit" onclick="openModal('modal-add-act-admin')">+ Add</button>
+        </div>
+        <div id="detail-act-list"></div>
+        <div id="detail-act-empty" style="font-size:.76rem;color:var(--muted2);display:none">No activities yet. Add the first one.</div>
+      </div>
+
+      <!-- Group Stats -->
+      <div class="detail-block">
+        <div class="db-hdr"><div class="db-title">&#128202; Group Stats</div></div>
+        <div id="detail-stats"></div>
+        <div style="margin-top:10px">
+          <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted2);margin-bottom:7px">Availability heatmap</div>
+          <div id="detail-heatmap"></div>
+        </div>
+      </div>
+
+      <button class="finalize-btn" onclick="showPage('apage-final');renderFinalPage()">Finalize Event &#8594;</button>
+    </div>
+  </div>
+
+  <!-- Final Page -->
+  <div class="apage" id="apage-final">
+    <div class="page-back-hdr">
+      <button class="back-btn" onclick="showPage('apage-detail')">&#8592; Event</button>
+      <div><div class="page-title">Finalize</div><div class="page-sub">Review data then push to the group</div></div>
+    </div>
+    <div style="padding:0 14px 60px;overflow-y:auto;flex:1">
+
+      <!-- Availability summary -->
+      <div class="card">
+        <div class="final-section-lbl">&#128197; Availability — Best Dates</div>
+        <div id="final-avail-heat"></div>
+      </div>
+
+      <!-- Rankings summary -->
+      <div class="card">
+        <div class="final-section-lbl">&#127881; Activity Rankings (group)</div>
+        <div id="final-rankings"></div>
+      </div>
+
+      <!-- Final selection -->
+      <div class="card">
+        <div class="final-section-lbl">&#9989; Your Final Decision</div>
+        <div class="fl"><label class="fl-label">Final Activity</label>
+          <select class="fi" id="final-act-sel"></select>
+        </div>
+        <div class="fl"><label class="fl-label">Final Dates</label>
+          <div class="fi" id="final-dates-display" onclick="openModal('modal-date-pick')" style="cursor:pointer;color:var(--muted2)">Tap to select from availability...</div>
+        </div>
+        <div class="fl"><label class="fl-label">Message to group</label>
+          <textarea class="fi" id="final-message" placeholder="Get ready..." style="min-height:54px"></textarea>
+        </div>
+      </div>
+
+      <button class="push-btn" id="push-btn" onclick="pushToGroup()">&#128640; Push to Group</button>
+    </div>
+  </div>
+
+</div><!-- /view-admin -->
+
+<!-- ═══════════════ GUEST APP ═══════════════ -->
+<div id="view-guest" class="view">
   <div class="topbar">
     <div class="topbar-left">
-      <span class="topbar-title" id="topbar-title">Party Planner</span>
+      <span class="topbar-title" id="guest-topbar-title">Party Planner</span>
       <button class="party-sw-btn" id="party-sw-btn" onclick="openSwitcher()" style="display:none">
         <span id="party-sw-label">my-party</span>
         <span class="sw-chev">&#9660;</span>
       </button>
     </div>
     <div class="topbar-right">
-      <span class="tb-admin" id="tb-admin" style="display:none">Admin</span>
-      <div class="tb-avatar" id="tb-avatar">?</div>
+      <div class="tb-avatar" id="guest-avatar">?</div>
       <button class="tb-signout" onclick="doLogout()">Sign out</button>
     </div>
   </div>
 
-  <div class="nav" id="main-nav">
-    <button class="nav-tab active" data-tab="home" onclick="switchTab('home',this)">Home</button>
-    <button class="nav-tab" data-tab="availability" onclick="switchTab('availability',this)">Availability</button>
-    <button class="nav-tab" data-tab="activities" onclick="switchTab('activities',this)">Activities</button>
-    <button class="nav-tab" id="tab-overview" data-tab="overview" onclick="switchTab('overview',this)" style="display:none">Overview</button>
-    <button class="nav-tab" id="tab-admin" data-tab="admin" onclick="switchTab('admin',this)" style="display:none">&#9881; Admin</button>
+  <!-- Countdown banner -->
+  <div class="cd-banner" id="cd-banner" style="display:none">
+    <span>&#9201;</span>
+    <span class="cd-time" id="cd-time">--d --h --m</span>
+    <span class="cd-label" id="cd-label">left to submit</span>
+  </div>
+
+  <div class="nav" id="guest-nav">
+    <button class="nav-tab active" data-tab="home" onclick="switchGuestTab('home',this)">Home</button>
+    <button class="nav-tab" data-tab="availability" onclick="switchGuestTab('availability',this)">Availability</button>
+    <button class="nav-tab" data-tab="activities" onclick="switchGuestTab('activities',this)">Activities</button>
+    <button class="nav-tab" id="tab-overview" data-tab="overview" onclick="switchGuestTab('overview',this)" style="display:none">Overview</button>
   </div>
 
   <div class="panels">
@@ -650,30 +1096,16 @@ select.field-input option{background:var(--card2);}
         <div class="home-title" id="home-title">Hey there &#128075;</div>
         <div class="home-sub" id="home-sub">Tap a dot to see who's coming from where</div>
       </div>
+      <!-- NOTE: map.jpg must be in the same folder as index.html -->
       <div class="map-outer" id="map-outer">
-        <svg id="map-svg" class="map-svg-el" viewBox="0 0 520 330" xmlns="http://www.w3.org/2000/svg">
-          <rect width="520" height="330" fill="#0e0e0e"/>
-          <path d="M62,62 L85,52 L125,46 L168,43 L210,41 L252,39 L294,39 L336,41 L375,46 L410,53 L438,62 L452,78 L457,98 L455,118 L446,134 L462,150 L466,170 L455,185 L438,192 L420,200 L400,212 L378,222 L358,228 L336,233 L308,237 L278,240 L250,240 L222,237 L194,230 L170,222 L148,216 L128,208 L108,198 L90,186 L76,172 L66,157 L59,142 L56,125 L54,108 L55,88 L58,74 Z" fill="#181818" stroke="#2a2a2a" stroke-width="1.2"/>
-          <path d="M358,228 L362,245 L359,262 L352,274 L344,268 L341,252 L343,236 Z" fill="#181818" stroke="#2a2a2a" stroke-width="1.2"/>
-          <ellipse cx="318" cy="96" rx="20" ry="9" fill="#0e0e0e" opacity=".7"/>
-          <ellipse cx="353" cy="89" rx="13" ry="6" fill="#0e0e0e" opacity=".7"/>
-          <line x1="205" y1="43" x2="200" y2="240" stroke="#1e1e1e" stroke-width=".8"/>
-          <line x1="285" y1="39" x2="280" y2="240" stroke="#1e1e1e" stroke-width=".8"/>
-          <line x1="365" y1="43" x2="356" y2="233" stroke="#1e1e1e" stroke-width=".8"/>
-          <line x1="55" y1="145" x2="466" y2="148" stroke="#1e1e1e" stroke-width=".8"/>
-          <line x1="55" y1="105" x2="457" y2="108" stroke="#1e1e1e" stroke-width=".8"/>
-          <line x1="60" y1="185" x2="455" y2="188" stroke="#1e1e1e" stroke-width=".8"/>
-          <path d="M 62,268 L 78,262 L 96,270 L 100,283 L 87,291 L 70,288 L 61,280 Z" fill="#181818" stroke="#2a2a2a" stroke-width="1"/>
-          <ellipse cx="152" cy="298" rx="14" ry="5" fill="#181818" stroke="#2a2a2a" stroke-width="1"/>
-          <g id="map-connectors"></g>
-        </svg>
+        <img src="map.jpg" class="map-img" alt="US Map" id="map-img"/>
         <div id="map-pins"></div>
         <div id="bio-popup" style="display:none"></div>
       </div>
       <div class="crew-strip" id="crew-strip"></div>
       <div class="home-nav-row">
-        <button class="hnb" onclick="switchTab('availability',document.querySelector('[data-tab=availability]'))">&#128197; Availability</button>
-        <button class="hnb hnb-p" onclick="switchTab('activities',document.querySelector('[data-tab=activities]'))">&#127881; Activities</button>
+        <button class="hnb" onclick="switchGuestTab('availability',document.querySelector('[data-tab=availability]'))">&#128197; Availability</button>
+        <button class="hnb hnb-p" onclick="switchGuestTab('activities',document.querySelector('[data-tab=activities]'))">&#127881; Activities</button>
       </div>
     </div>
 
@@ -687,7 +1119,7 @@ select.field-input option{background:var(--card2);}
         <div class="locked-sub">The organizer has locked this section</div>
       </div>
       <div id="avail-content">
-        <div class="avail-hint"><strong>Tap a start date, then an end date</strong> to add a free range. Add as many as you like, then rank them by preference.</div>
+        <div class="avail-hint"><strong>Tap a start date, then an end date</strong> to add a free range. Add as many as you like, then rank them.</div>
         <div class="cal-nav-row">
           <button class="cal-arr-btn" onclick="calPrev()">&#8249;</button>
           <span class="cal-month-lbl" id="cal-month-lbl"></span>
@@ -714,7 +1146,7 @@ select.field-input option{background:var(--card2);}
         </div>
         <div id="avail-saved-view" style="display:none">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">
-            <span style="font-size:.73rem;color:var(--muted)">Saved &#10003; &nbsp;<span id="avail-saved-count"></span></span>
+            <span style="font-size:.73rem;color:var(--muted)">Saved &#10003; <span id="avail-saved-count"></span></span>
             <button class="btn-g" style="padding:5px 11px;font-size:.72rem" onclick="editAvailability()">Edit</button>
           </div>
           <div id="avail-saved-ranges"></div>
@@ -729,117 +1161,32 @@ select.field-input option{background:var(--card2);}
 
     <!-- ACTIVITIES -->
     <div class="panel" id="panel-activities">
-      <div id="act-locked" class="locked-panel" style="display:none">
+      <div id="acts-locked" class="locked-panel" style="display:none">
         <div class="locked-icon">&#128274;</div>
         <div class="locked-title">Activities are locked</div>
         <div class="locked-sub">The organizer has locked this section</div>
       </div>
-      <div id="act-content">
+      <div id="acts-content">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
           <div class="sec-title" style="margin:0">Activities</div>
-          <button class="btn-g" id="add-act-btn" onclick="toggleAddForm()" style="padding:6px 12px;font-size:.74rem">+ Suggest</button>
+          <button class="btn-g" id="add-act-guest-btn" onclick="toggleGuestAddForm()" style="padding:6px 12px;font-size:.74rem">+ Suggest</button>
         </div>
-        <div class="sec-sub">Add suggestions &middot; rate &amp; comment on everything</div>
-        <div class="add-form" id="add-form">
-          <div class="add-form-title">&#10133; New Activity</div>
+        <div class="sec-sub">Rank all activities &middot; tap to expand details &amp; comments</div>
+        <div class="add-act-form" id="add-act-form">
+          <div class="add-form-title">&#10133; Suggest Activity</div>
           <div class="fl"><label class="fl-label">Name *</label><input class="fi" id="af-name" placeholder="Activity name"/></div>
-          <div class="fg2">
-            <div class="fl"><label class="fl-label">Category</label><select class="fi" id="af-cat"></select></div>
-            <div class="fl"><label class="fl-label">Cost / person</label><input class="fi" id="af-cost" type="number" placeholder="$0"/></div>
-          </div>
-          <div class="fl"><label class="fl-label">Link (optional)</label><input class="fi" id="af-link" placeholder="https://..."/></div>
           <div class="fl"><label class="fl-label">Description</label><textarea class="fi" id="af-desc" placeholder="Tell the crew about it..."></textarea></div>
-          <button class="btn-p" onclick="submitActivity()" style="width:100%">Add Activity</button>
+          <div class="fl"><label class="fl-label">Est. cost / person</label><input class="fi" id="af-cost" type="number" placeholder="$0"/></div>
+          <button class="btn-p" onclick="submitGuestActivity()" style="width:100%">Add Activity</button>
+          <div style="font-size:.68rem;color:var(--muted2);text-align:center;margin-top:6px">It'll appear at the bottom of everyone's list</div>
         </div>
-        <div id="activity-list"></div>
+        <div id="acts-list"></div>
       </div>
     </div>
 
     <!-- OVERVIEW -->
     <div class="panel" id="panel-overview">
       <div id="overview-content"></div>
-    </div>
-
-    <!-- ADMIN -->
-    <div class="panel" id="panel-admin">
-      <div class="sec-title">Admin</div>
-      <div class="sec-sub">Only visible to you</div>
-
-      <!-- All Parties -->
-      <div class="card">
-        <div class="card-label">All Parties</div>
-        <div class="cur-banner">
-          <div class="cb-dot"></div>
-          <div><div class="cb-lbl">Currently viewing</div><div class="cb-name" id="admin-cur-pid">---</div></div>
-        </div>
-        <div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted2);margin-bottom:7px">Your parties</div>
-        <div id="admin-party-list"></div>
-        <div class="divider"></div>
-        <div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted2);margin-bottom:7px">Create new party</div>
-        <div class="fl"><label class="fl-label">Party ID</label>
-          <input class="fi" id="new-party-id" placeholder="e.g. mikes-bachelor" oninput="sanitizePartyId(this)"/>
-        </div>
-        <div style="font-size:.66rem;color:var(--muted2);line-height:1.5;margin-bottom:9px">Lowercase letters, numbers and hyphens only. Becomes the sheet tab name.</div>
-        <button class="btn-p" style="width:100%" onclick="createParty()">+ Create Party</button>
-      </div>
-
-      <!-- Trip name -->
-      <div class="card">
-        <div class="card-label">Trip Name</div>
-        <div class="fl" style="margin-bottom:8px"><input class="fi" id="admin-trip-name" placeholder="e.g. Mike's Bachelor Trip"/></div>
-        <button class="btn-p" style="width:100%" onclick="saveAdminTripName()">Save Name</button>
-      </div>
-
-      <!-- Calendar range -->
-      <div class="card">
-        <div class="card-label">Availability Calendar Range</div>
-        <p style="font-size:.74rem;color:var(--muted);margin-bottom:11px;line-height:1.5">Set the date window your group can pick from.</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:8px">
-          <div class="fl" style="margin-bottom:0"><label class="fl-label">Start</label><input class="fi" type="date" id="admin-cal-start" oninput="updateCalPreview()"/></div>
-          <div class="fl" style="margin-bottom:0"><label class="fl-label">End</label><input class="fi" type="date" id="admin-cal-end" oninput="updateCalPreview()"/></div>
-        </div>
-        <div id="admin-cal-preview" style="font-size:.72rem;color:var(--muted);margin-bottom:9px"></div>
-        <button class="btn-p" style="width:100%" onclick="saveCalRange()">Save Calendar Range</button>
-      </div>
-
-      <!-- Push to group -->
-      <div class="card">
-        <div class="card-label">Share with Group</div>
-        <p style="font-size:.74rem;color:var(--muted);margin-bottom:11px;line-height:1.5">Post a final decision and unlock the Overview tab for everyone.</p>
-        <div class="fl"><label class="fl-label">Final Activity</label><select class="adm-sel" id="admin-final-act"></select></div>
-        <div class="fl"><label class="fl-label">Final Dates</label><div class="fin-dates" id="admin-final-dates" onclick="pickFinalDates()">Tap to select dates...</div></div>
-        <div class="fl"><label class="fl-label">Message to group</label><textarea class="fi" id="admin-push-msg" placeholder="Get ready..." style="min-height:50px"></textarea></div>
-        <button class="push-btn" id="push-btn" onclick="pushToGroup()">&#128640; Push to Group</button>
-      </div>
-
-      <!-- Lock sections -->
-      <div class="card">
-        <div class="card-label">Lock Sections</div>
-        <div class="tog-row">
-          <div><div class="tog-lbl">Availability</div><div class="tog-sub">Allow date selection</div></div>
-          <button class="toggle-sw on" id="lock-avail" onclick="toggleLock('avail')"></button>
-        </div>
-        <div class="tog-row">
-          <div><div class="tog-lbl">Activities</div><div class="tog-sub">Allow suggestions &amp; votes</div></div>
-          <button class="toggle-sw on" id="lock-acts" onclick="toggleLock('acts')"></button>
-        </div>
-      </div>
-
-      <!-- Users & party access -->
-      <div class="card">
-        <div class="card-label">Users &amp; Party Access</div>
-        <div id="admin-user-list"></div>
-        <button class="btn-g" style="width:100%;margin-top:10px" onclick="openModal('modal-add-user')">+ Add User</button>
-      </div>
-
-      <!-- Edit profiles -->
-      <div class="card">
-        <div class="card-label">Edit Profiles</div>
-        <div class="fl" style="margin-bottom:8px"><label class="fl-label">Select user</label>
-          <select class="adm-sel" id="admin-edit-user-sel" onchange="loadProfileForEdit()"></select>
-        </div>
-        <div id="admin-profile-edit-area"></div>
-      </div>
     </div>
 
     <!-- PROFILE -->
@@ -850,10 +1197,10 @@ select.field-input option{background:var(--card2);}
       <div class="card">
         <div class="fl"><label class="fl-label">City</label><input class="fi" id="profile-city" placeholder="e.g. Austin, TX"/></div>
         <div class="fl"><label class="fl-label">Bio / Quote</label><textarea class="fi" id="profile-bio" placeholder="Something memorable..."></textarea></div>
-        <div class="fl"><label class="fl-label">Tags (comma separated)</label><input class="fi" id="profile-tags" placeholder="&#127936; NBA, &#127829; Food, &#127925; Music"/></div>
+        <div class="fl"><label class="fl-label">Tags (comma separated)</label><input class="fi" id="profile-tags" placeholder="&#127936; NBA, &#127829; Food"/></div>
         <button class="btn-p" style="width:100%" onclick="saveProfile()">Save Profile &#10003;</button>
       </div>
-      <button class="btn-g" style="width:100%;margin-top:4px" onclick="switchTab('home',document.querySelector('[data-tab=home]'))">&#8592; Back to Home</button>
+      <button class="btn-g" style="width:100%;margin-top:4px" onclick="switchGuestTab('home',document.querySelector('[data-tab=home]'))">&#8592; Back to Home</button>
     </div>
 
   </div><!-- /panels -->
@@ -862,30 +1209,27 @@ select.field-input option{background:var(--card2);}
     <div class="sync-dot synced" id="sync-dot"></div>
     <span class="sync-msg" id="sync-msg">Connected</span>
   </div>
-
-</div><!-- /view-app -->
+</div><!-- /view-guest -->
 
 <!-- Party Switcher Sheet -->
 <div class="sw-overlay" id="sw-overlay" onclick="closeSwitcher(event)">
   <div class="sw-sheet">
     <div class="sw-handle"></div>
-    <div class="sw-title">Your Parties</div>
-    <div class="sw-sub">Tap to switch &mdash; your data saves automatically</div>
+    <div class="sw-title">Your Events</div>
+    <div class="sw-sub">Tap to switch &mdash; saves automatically</div>
     <div id="sw-party-list"></div>
   </div>
 </div>
 
-<!-- Add User Modal -->
+<!-- Modals -->
 <div class="modal-ov" id="modal-add-user">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-title">Add User</div>
-    <div class="modal-sub">They'll be able to log in with these credentials</div>
+    <div class="modal-sub">They'll log in with these credentials</div>
     <div class="fl"><label class="fl-label">Name</label><input class="fi" id="nu-name" placeholder="First name"/></div>
-    <div class="fl"><label class="fl-label">Password</label><input class="fi" id="nu-pass" placeholder="Choose a password" type="password"/></div>
-    <div class="fl"><label class="fl-label">Role</label>
-      <select class="fi" id="nu-role"><option value="guest">Guest</option><option value="admin">Admin</option></select>
-    </div>
+    <div class="fl"><label class="fl-label">Password</label><input class="fi" id="nu-pass" type="password" placeholder="Choose a password"/></div>
+    <div class="fl"><label class="fl-label">Email</label><input class="fi" id="nu-email" type="email" placeholder="email@address.com"/></div>
     <div style="display:flex;gap:8px;margin-top:6px">
       <button class="btn-g" style="flex:1" onclick="closeModal('modal-add-user')">Cancel</button>
       <button class="btn-p" style="flex:2" onclick="addUser()">Add User</button>
@@ -893,7 +1237,48 @@ select.field-input option{background:var(--card2);}
   </div>
 </div>
 
-<!-- Date Picker Modal -->
+<div class="modal-ov" id="modal-edit-user">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit User</div>
+    <div class="modal-sub" id="edit-user-sub"></div>
+    <div class="fl"><label class="fl-label">Password</label><input class="fi" id="eu-pass" type="password" placeholder="New password (leave blank to keep)"/></div>
+    <div class="fl"><label class="fl-label">Email</label><input class="fi" id="eu-email" type="email"/></div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn-g" style="flex:1" onclick="closeModal('modal-edit-user')">Cancel</button>
+      <button class="btn-p" style="flex:2" onclick="saveEditUser()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-party-access">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Users / Party Access</div>
+    <div class="modal-sub">Check users who should have access to this event</div>
+    <div id="mpa-content"></div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn-g" style="flex:1" onclick="closeModal('modal-party-access')">Cancel</button>
+      <button class="btn-p" style="flex:2" onclick="savePartyAccess()">Save Access &#10003;</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-add-act-admin">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-act-title">Add Activity</div>
+    <div class="modal-sub">Admin-added activities appear for all participants</div>
+    <div class="fl"><label class="fl-label">Name *</label><input class="fi" id="admin-af-name" placeholder="Activity name"/></div>
+    <div class="fl"><label class="fl-label">Description</label><textarea class="fi" id="admin-af-desc" placeholder="Details..."></textarea></div>
+    <div class="fl"><label class="fl-label">Est. cost / person</label><input class="fi" id="admin-af-cost" type="number" placeholder="$0"/></div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn-g" style="flex:1" onclick="closeModal('modal-add-act-admin')">Cancel</button>
+      <button class="btn-p" style="flex:2" onclick="submitAdminActivity()">Save Activity</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-ov" id="modal-date-pick">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -904,16 +1289,16 @@ select.field-input option{background:var(--card2);}
   </div>
 </div>
 
-<!-- User Access Modal -->
-<div class="modal-ov" id="modal-user-access">
+<div class="modal-ov" id="modal-profile-edit">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="mua-title">Edit Access</div>
-    <div class="modal-sub">Check all parties this person should have access to</div>
-    <div id="mua-content"></div>
-    <div style="display:flex;gap:8px;margin-top:10px">
-      <button class="btn-g" style="flex:1" onclick="closeModal('modal-user-access')">Cancel</button>
-      <button class="btn-p" style="flex:2" onclick="saveUserAccess()">Save Access &#10003;</button>
+    <div class="modal-title">Edit Profile</div>
+    <div class="modal-sub">Admin editing a user's profile</div>
+    <div class="fl"><label class="fl-label">User</label><select class="fi" id="admin-profile-user-sel" onchange="loadAdminProfileEdit()"></select></div>
+    <div id="admin-profile-fields"></div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn-g" style="flex:1" onclick="closeModal('modal-profile-edit')">Cancel</button>
+      <button class="btn-p" style="flex:2" onclick="saveAdminProfile()">Save Profile</button>
     </div>
   </div>
 </div>
@@ -921,15 +1306,14 @@ select.field-input option{background:var(--card2);}
 </div><!-- /app -->
 
 <script>
-// ═══════════════════════════════════
+// ═══════════════════════════════════════════════════════
 //  CONSTANTS
-// ═══════════════════════════════════
-const CATS = ["🍻 Bar/Nightlife","🎳 Games","🌊 Outdoors","🏎️ Racing/Adventure","🎰 Casino","🍽️ Dining","🎵 Music/Concert","✈️ Travel","🏖️ Beach","🎭 Experience","Other"];
+// ═══════════════════════════════════════════════════════
+const MONTHS   = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTHS_S = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const RC = ['#fff','#aaa','#777','#555','#3a3a3a'];
 const UC  = ['#ffffff','#aaaaaa','#777777','#555555','#3a3a3a','#2a2a2a','#1e1e1e','#161616'];
 const UFG = ['#0c0c0c','#0c0c0c','#0c0c0c','#efefef','#c8c8c8','#aaaaaa','#888','#666'];
-const RC  = ['#fff','#aaa','#777','#555','#3a3a3a'];
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const MONTHS_S = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 const CITY_COORDS = {
   "new york":[79,31],"new york, ny":[79,31],"nyc":[79,31],
@@ -958,52 +1342,54 @@ const CITY_COORDS = {
   "portland":[11,22],"portland, or":[11,22],"sacramento":[10,50],
 };
 function getCityCoords(city){
-  if(!city)return null;
-  const k=city.trim().toLowerCase();
-  if(CITY_COORDS[k])return CITY_COORDS[k];
-  for(const[key,v]of Object.entries(CITY_COORDS)){
-    if(k.includes(key)||key.includes(k.split(',')[0].trim()))return v;
+  if(!city) return null;
+  const k = city.trim().toLowerCase();
+  if(CITY_COORDS[k]) return CITY_COORDS[k];
+  for(const [key,v] of Object.entries(CITY_COORDS)){
+    if(k.includes(key) || key.includes(k.split(',')[0].trim())) return v;
   }
   return null;
 }
 
-// ═══════════════════════════════════
+// ═══════════════════════════════════════════════════════
 //  EMPTY TEMPLATES
-// ═══════════════════════════════════
-const EMPTY_PARTY={
-  tripName:'Party Planner',
-  activities:[],availability:{},userVotes:{},
-  locks:{avail:false,acts:false},
-  pushed:false,pushData:{actId:null,dates:'',message:''},
-  calStart:'2026-04-01',calEnd:'2026-07-18',
+// ═══════════════════════════════════════════════════════
+const EMPTY_PARTY = {
+  tripName:'Party Planner', activities:[], availability:{}, userVotes:{},
+  actRankings:{}, // { userName: [actId, actId, ...] } ranked order
+  locks:{avail:false, acts:false},
+  pushed:false, pushData:{actId:null, dates:'', message:''},
+  calStart:'2026-04-01', calEnd:'2026-07-18',
+  deadline: null, // ISO string or null
 };
 
-// ═══════════════════════════════════
+// ═══════════════════════════════════════════════════════
 //  STATE
-// ═══════════════════════════════════
-let S=null, USERS=[], currentUser=null;
-let activePartyId=DEFAULT_PARTY_ID, allPartyIds=[];
-let syncTimer=null, activeBioUser=null, expandedActs={};
+// ═══════════════════════════════════════════════════════
+let S = null, USERS = [], currentUser = null;
+let activePartyId = DEFAULT_PARTY_ID, allPartyIds = [];
+let syncTimer = null, activeBioUser = null, expandedActs = {};
+let editingUserId = null, cdInterval = null, adminCdInterval = null;
 
-// ═══════════════════════════════════
+// ═══════════════════════════════════════════════════════
 //  SHEETS API
-// ═══════════════════════════════════
-async function sheetsCall(action,payload={}){
-  const res=await fetch(SCRIPT_URL,{
-    method:'POST',headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({action,...payload}),
+// ═══════════════════════════════════════════════════════
+async function sheetsCall(action, payload={}){
+  const res = await fetch(SCRIPT_URL, {
+    method:'POST', headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify({action, ...payload}),
   });
-  if(!res.ok)throw new Error('HTTP '+res.status);
-  const json=await res.json();
-  if(json.error)throw new Error(json.error);
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const json = await res.json();
+  if(json.error) throw new Error(json.error);
   return json.data;
 }
 
-function setSyncStatus(state,msg){
+function setSyncStatus(state, msg){
   const dot=document.getElementById('sync-dot');
   const msgEl=document.getElementById('sync-msg');
   const bar=document.getElementById('sync-bar');
-  if(!dot)return;
+  if(!dot) return;
   dot.className='sync-dot '+state;
   msgEl.textContent=msg;
   bar.className=state==='error'?'sync-bar error-bar':'sync-bar';
@@ -1013,62 +1399,63 @@ function hideLoading(){document.getElementById('loading-overlay').classList.add(
 
 async function loadUsers(){
   try{
-    const u=await sheetsCall('getUsers');
-    USERS=Array.isArray(u)&&u.length>0?u:[{name:'Admin',password:'admin123',role:'admin',city:'',bio:'',tags:[],parties:[]}];
-    if(!Array.isArray(u)||u.length===0)await sheetsCall('setUsers',{users:USERS});
+    const u = await sheetsCall('getUsers');
+    USERS = Array.isArray(u) && u.length > 0 ? u
+          : [{name:'Admin',password:'Teresaisawesome',role:'admin',city:'',bio:'',tags:[],parties:[],email:''}];
+    if(!Array.isArray(u)||u.length===0) await sheetsCall('setUsers',{users:USERS});
   }catch(e){
-    USERS=[{name:'Admin',password:'admin123',role:'admin',city:'',bio:'',tags:[],parties:[]}];
+    USERS=[{name:'Admin',password:'Teresaisawesome',role:'admin',city:'',bio:'',tags:[],parties:[],email:''}];
   }
 }
 
 async function loadParty(pid){
   try{
     setLoading('Loading '+pid+'...');
-    const data=await sheetsCall('getState',{partyId:pid});
-    S={...EMPTY_PARTY,...data,
+    const data = await sheetsCall('getState',{partyId:pid});
+    S = {...EMPTY_PARTY, ...data,
       locks:{...EMPTY_PARTY.locks,...(data.locks||{})},
       pushData:{...EMPTY_PARTY.pushData,...(data.pushData||{})},
-      calStart:data.calStart||EMPTY_PARTY.calStart,
-      calEnd:data.calEnd||EMPTY_PARTY.calEnd,
+      calStart: data.calStart||EMPTY_PARTY.calStart,
+      calEnd:   data.calEnd  ||EMPTY_PARTY.calEnd,
+      actRankings: data.actRankings||{},
+      deadline: data.deadline||null,
     };
   }catch(e){
-    S=JSON.parse(JSON.stringify(EMPTY_PARTY));
-    setSyncStatus('error','Could not load party data');
+    S = JSON.parse(JSON.stringify(EMPTY_PARTY));
+    setSyncStatus('error','Could not load event data');
   }
 }
 
 async function loadPartyIds(){
   try{
-    const p=await sheetsCall('listParties');
-    allPartyIds=Array.isArray(p)?p:[];
-  }catch(e){allPartyIds=[];}
+    const p = await sheetsCall('listParties');
+    allPartyIds = Array.isArray(p) ? p : [];
+  }catch(e){ allPartyIds=[]; }
 }
 
 function saveState(){
-  if(syncTimer)clearTimeout(syncTimer);
+  if(syncTimer) clearTimeout(syncTimer);
   setSyncStatus('syncing','Saving...');
-  syncTimer=setTimeout(pushState,400);
+  syncTimer = setTimeout(pushState, 400);
 }
-
 async function pushState(){
   try{
-    await sheetsCall('setState',{partyId:activePartyId,state:S});
+    await sheetsCall('setState',{partyId:activePartyId, state:S});
     setSyncStatus('synced','Synced · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
   }catch(e){
     setSyncStatus('error','Sync failed — tap to retry');
     document.getElementById('sync-bar').onclick=()=>{setSyncStatus('syncing','Retrying...');pushState();};
   }
 }
-
 async function saveUsers(){
-  try{await sheetsCall('setUsers',{users:USERS});}catch(e){console.error('saveUsers:',e);}
+  try{ await sheetsCall('setUsers',{users:USERS}); }catch(e){ console.error('saveUsers:',e); }
 }
 
 function startPolling(){
   setInterval(async()=>{
-    if(!currentUser)return;
+    if(!currentUser || currentUser.role==='admin') return;
     try{
-      const[data,newU]=await Promise.all([
+      const [data,newU] = await Promise.all([
         sheetsCall('getState',{partyId:activePartyId}),
         sheetsCall('getUsers'),
       ]);
@@ -1077,84 +1464,637 @@ function startPolling(){
         pushData:{...EMPTY_PARTY.pushData,...(data.pushData||{})},
         calStart:data.calStart||EMPTY_PARTY.calStart,
         calEnd:data.calEnd||EMPTY_PARTY.calEnd,
+        actRankings:data.actRankings||{},
+        deadline:data.deadline||null,
       };
-      S.activities=inc.activities;S.userVotes=inc.userVotes;
-      S.locks=inc.locks;S.pushed=inc.pushed;S.pushData=inc.pushData;
-      S.tripName=inc.tripName;S.calStart=inc.calStart;S.calEnd=inc.calEnd;
-      Object.keys(inc.availability).forEach(n=>{
-        if(n!==currentUser.name)S.availability[n]=inc.availability[n];
-      });
-      if(Array.isArray(newU))newU.forEach(u=>{
+      S.activities   = inc.activities;
+      S.locks        = inc.locks;
+      S.pushed       = inc.pushed;
+      S.pushData     = inc.pushData;
+      S.tripName     = inc.tripName;
+      S.calStart     = inc.calStart;
+      S.calEnd       = inc.calEnd;
+      S.deadline     = inc.deadline;
+      // merge others' rankings/availability only
+      Object.keys(inc.actRankings).forEach(n=>{if(n!==currentUser.name)S.actRankings[n]=inc.actRankings[n];});
+      Object.keys(inc.availability).forEach(n=>{if(n!==currentUser.name)S.availability[n]=inc.availability[n];});
+      if(Array.isArray(newU)) newU.forEach(u=>{
         if(u.name!==currentUser.name){
           const idx=USERS.findIndex(x=>x.name===u.name);
-          if(idx>=0)USERS[idx]=u;else USERS.push(u);
+          if(idx>=0) USERS[idx]=u; else USERS.push(u);
         }
       });
-      document.getElementById('topbar-title').textContent=S.tripName;
-      if(S.pushed)document.getElementById('tab-overview').style.display='';
-      const ap=document.querySelector('.panel.active')?.id;
-      if(ap==='panel-activities')renderActivities();
-      if(ap==='panel-overview')renderOverview();
-      if(ap==='panel-home')renderHome();
+      // check for newly added activities — append to bottom of user's ranking
+      const myRanks = S.actRankings[currentUser.name]||[];
+      const newActs = S.activities.filter(a=>!myRanks.includes(a.id));
+      if(newActs.length>0){
+        S.actRankings[currentUser.name]=[...myRanks,...newActs.map(a=>a.id)];
+      }
+      document.title = S.tripName || 'Party Planner';
+      document.getElementById('guest-topbar-title').textContent = S.tripName;
+      if(S.pushed) document.getElementById('tab-overview').style.display='';
+      updateCountdownBanner();
+      const ap=document.querySelector('#view-guest .panel.active')?.id;
+      if(ap==='panel-activities') renderGuestActivities();
+      if(ap==='panel-overview')   renderOverview();
+      if(ap==='panel-home')       renderHome();
     }catch(e){}
   },15000);
 }
 
-// ═══════════════════════════════════
+// ═══════════════════════════════════════════════════════
 //  AUTH
-// ═══════════════════════════════════
-function getUserParties(u){return Array.isArray(u.parties)?u.parties:[];}
+// ═══════════════════════════════════════════════════════
+function getUserParties(u){ return Array.isArray(u.parties)?u.parties:[]; }
 
 async function doLogin(){
-  const name=document.getElementById('inp-name').value.trim();
-  const pass=document.getElementById('inp-pass').value;
-  const u=USERS.find(u=>u.name.toLowerCase()===name.toLowerCase()&&u.password===pass);
-  if(!u){document.getElementById('login-error').textContent='Wrong name or password.';return;}
-  currentUser=u;
+  const name = document.getElementById('inp-name').value.trim();
+  const pass = document.getElementById('inp-pass').value;
+  const u = USERS.find(u=>u.name.toLowerCase()===name.toLowerCase()&&u.password===pass);
+  if(!u){ document.getElementById('login-error').textContent='Wrong name or password.'; return; }
+  currentUser = u;
   document.getElementById('login-error').textContent='';
   document.getElementById('loading-overlay').classList.remove('hidden');
-  const userParties=getUserParties(u);
-  activePartyId=userParties.length>0?userParties[0]:DEFAULT_PARTY_ID;
-  await loadParty(activePartyId);
-  await loadPartyIds();
-  document.getElementById('view-login').classList.remove('active');
-  document.getElementById('view-app').classList.add('active');
-  document.getElementById('topbar-title').textContent=S.tripName;
-  document.getElementById('tb-avatar').textContent=u.name[0];
-  document.getElementById('tb-admin').style.display=u.role==='admin'?'':'none';
-  const swBtn=document.getElementById('party-sw-btn');
-  if(userParties.length>1){swBtn.style.display='flex';document.getElementById('party-sw-label').textContent=S.tripName||activePartyId;}
-  else swBtn.style.display='none';
-  document.getElementById('tab-overview').style.display=(u.role==='admin'||S.pushed)?'':'none';
-  document.getElementById('tab-admin').style.display=u.role==='admin'?'':'none';
-  populateCatSelect();
-  hideLoading();
-  setSyncStatus('synced','Connected · '+activePartyId);
-  switchTab('home',document.querySelector('[data-tab="home"]'));
-  startPolling();
+
+  if(u.role==='admin'){
+    await loadPartyIds();
+    hideLoading();
+    document.title = 'Party Planner — Admin';
+    document.getElementById('admin-avatar').textContent = u.name[0];
+    document.getElementById('view-login').classList.remove('active');
+    document.getElementById('view-admin').classList.add('active');
+    showPage('apage-events');
+    renderAdminEventList();
+    renderAdminUserList();
+  } else {
+    const userParties = getUserParties(u);
+    activePartyId = userParties.length>0 ? userParties[0] : DEFAULT_PARTY_ID;
+    await loadParty(activePartyId);
+    await loadPartyIds();
+    // ensure rankings initialized for user
+    ensureUserRankings();
+    hideLoading();
+    document.title = S.tripName || 'Party Planner';
+    document.getElementById('guest-topbar-title').textContent = S.tripName;
+    document.getElementById('guest-avatar').textContent = u.name[0];
+    const swBtn = document.getElementById('party-sw-btn');
+    if(userParties.length>1){swBtn.style.display='flex';document.getElementById('party-sw-label').textContent=S.tripName||activePartyId;}
+    else swBtn.style.display='none';
+    document.getElementById('tab-overview').style.display=(S.pushed)?'':'none';
+    document.getElementById('view-login').classList.remove('active');
+    document.getElementById('view-guest').classList.add('active');
+    updateCountdownBanner();
+    switchGuestTab('home',document.querySelector('[data-tab="home"]'));
+    setSyncStatus('synced','Connected · '+activePartyId);
+    startPolling();
+  }
 }
 
 function doLogout(){
-  currentUser=null;S=null;USERS=[];activePartyId=DEFAULT_PARTY_ID;
-  document.getElementById('view-app').classList.remove('active');
+  currentUser=null; S=null; USERS=[]; activePartyId=DEFAULT_PARTY_ID;
+  if(cdInterval) clearInterval(cdInterval);
+  if(adminCdInterval) clearInterval(adminCdInterval);
+  document.getElementById('view-admin')?.classList.remove('active');
+  document.getElementById('view-guest')?.classList.remove('active');
   document.getElementById('view-login').classList.add('active');
   document.getElementById('inp-name').value='';
   document.getElementById('inp-pass').value='';
+  document.title='Party Planner';
 }
 
 document.getElementById('inp-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 document.getElementById('inp-name').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('inp-pass').focus();});
 
-// ═══════════════════════════════════
-//  PARTY SWITCHING
-// ═══════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//  ADMIN: PAGE NAVIGATION
+// ═══════════════════════════════════════════════════════
+function showPage(pageId){
+  document.querySelectorAll('.apage').forEach(p=>p.classList.remove('active'));
+  document.getElementById(pageId)?.classList.add('active');
+  // scroll to top
+  const scroll = document.getElementById(pageId)?.querySelector('[style*="overflow-y:auto"]')
+               || document.getElementById(pageId)?.querySelector('.apage-scroll');
+  if(scroll) scroll.scrollTop=0;
+  // also scroll detail-scroll
+  const ds=document.getElementById('detail-scroll');
+  if(ds&&pageId==='apage-detail') ds.scrollTop=0;
+}
+
+function switchAdminTab(tab){
+  document.querySelectorAll('.admin-nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('atab-'+tab)?.classList.add('active');
+  document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('apanel-'+tab)?.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════
+//  ADMIN: EVENTS
+// ═══════════════════════════════════════════════════════
+function renderAdminEventList(){
+  const list = document.getElementById('admin-event-list');
+  if(!list) return;
+  list.innerHTML='';
+  if(allPartyIds.length===0){
+    list.innerHTML='<div class="empty-s"><div class="ei">&#127881;</div>No events yet. Create your first one.</div>';
+    return;
+  }
+  allPartyIds.forEach(pid=>{
+    const usersInEvent = USERS.filter(u=>getUserParties(u).includes(pid)).length;
+    const row=document.createElement('div'); row.className='event-row';
+    row.innerHTML=`<div class="ev-dot"></div>
+      <div style="flex:1"><div class="ev-name">${esc(pid)}</div>
+      <div class="ev-meta">${usersInEvent} participant${usersInEvent!==1?'s':''}</div></div>
+      <div class="ev-arrow">›</div>`;
+    row.onclick=()=>openEventDetail(pid);
+    list.appendChild(row);
+  });
+}
+
+async function openEventDetail(pid){
+  document.getElementById('loading-overlay').classList.remove('hidden');
+  setLoading('Loading '+pid+'...');
+  await loadParty(pid);
+  activePartyId=pid;
+  document.title=(S.tripName||pid)+' — Admin';
+  document.getElementById('detail-event-name').textContent=S.tripName||pid;
+  document.getElementById('detail-event-id').textContent=pid;
+  document.getElementById('admin-topbar-title').textContent=S.tripName||pid;
+  document.getElementById('detail-cal-start').value=S.calStart||'';
+  document.getElementById('detail-cal-end').value=S.calEnd||'';
+  document.getElementById('detail-deadline').value=S.deadline?S.deadline.slice(0,16):'';
+  updateCalPreview();
+  renderDetailUsersChips();
+  renderDetailActList();
+  renderDetailStats();
+  updateLockToggle('avail');
+  updateLockToggle('acts');
+  startAdminCd();
+  hideLoading();
+  showPage('apage-detail');
+}
+
+function renderDetailUsersChips(){
+  const chips=document.getElementById('detail-users-chips');
+  if(!chips) return;
+  const inEvent=USERS.filter(u=>getUserParties(u).includes(activePartyId));
+  chips.innerHTML=inEvent.length===0
+    ? '<span style="font-size:.74rem;color:var(--muted2)">No users assigned. Click Edit to add.</span>'
+    : inEvent.map(u=>`<span style="font-size:.7rem;background:var(--card2);border:1px solid var(--border2);border-radius:20px;padding:3px 9px;color:var(--text2)">${esc(u.name)}</span>`).join('');
+}
+
+function renderDetailActList(){
+  const list=document.getElementById('detail-act-list');
+  const empty=document.getElementById('detail-act-empty');
+  if(!list) return;
+  list.innerHTML='';
+  if(!S.activities.length){empty.style.display='';return;}
+  empty.style.display='none';
+  S.activities.forEach((a,i)=>{
+    const row=document.createElement('div'); row.className='act-master-row';
+    row.innerHTML=`<div class="amr-num">${i+1}</div>
+      <div style="flex:1"><div class="amr-name">${esc(a.name)}</div>
+      ${a.cost>0?`<div class="amr-cost">$${a.cost}/person</div>`:''}
+      </div>
+      <div class="amr-btns">
+        <button class="amr-btn" onclick="openEditActAdmin(${a.id})">&#9998;</button>
+        <button class="amr-btn del" onclick="deleteActAdmin(${a.id})">&#128465;</button>
+      </div>`;
+    list.appendChild(row);
+  });
+}
+
+let editingActId=null;
+function openEditActAdmin(id){
+  const a=S.activities.find(x=>x.id===id);if(!a)return;
+  editingActId=id;
+  document.getElementById('modal-act-title').textContent='Edit Activity';
+  document.getElementById('admin-af-name').value=a.name;
+  document.getElementById('admin-af-desc').value=a.desc||'';
+  document.getElementById('admin-af-cost').value=a.cost||'';
+  openModal('modal-add-act-admin');
+}
+
+function submitAdminActivity(){
+  const name=document.getElementById('admin-af-name').value.trim();
+  if(!name){document.getElementById('admin-af-name').focus();return;}
+  const desc=document.getElementById('admin-af-desc').value.trim();
+  const cost=parseInt(document.getElementById('admin-af-cost').value)||0;
+  if(editingActId){
+    const a=S.activities.find(x=>x.id===editingActId);
+    if(a){a.name=name;a.desc=desc;a.cost=cost;}
+    editingActId=null;
+    document.getElementById('modal-act-title').textContent='Add Activity';
+  } else {
+    const newAct={id:Date.now(),name,desc,cost,addedBy:'Admin',comments:[]};
+    S.activities.push(newAct);
+    // append to bottom of ALL users' rankings
+    USERS.forEach(u=>{
+      if(!S.actRankings[u.name]) S.actRankings[u.name]=[];
+      S.actRankings[u.name].push(newAct.id);
+    });
+  }
+  document.getElementById('admin-af-name').value='';
+  document.getElementById('admin-af-desc').value='';
+  document.getElementById('admin-af-cost').value='';
+  saveState(); closeModal('modal-add-act-admin'); renderDetailActList();
+}
+
+function deleteActAdmin(id){
+  if(!confirm('Delete this activity? This removes it for everyone.')) return;
+  S.activities=S.activities.filter(a=>a.id!==id);
+  Object.keys(S.actRankings).forEach(u=>{
+    S.actRankings[u]=S.actRankings[u].filter(x=>x!==id);
+  });
+  saveState(); renderDetailActList();
+}
+
+function renderDetailStats(){
+  const stats=document.getElementById('detail-stats');
+  const heat=document.getElementById('detail-heatmap');
+  if(!stats) return;
+  const usersInEvent=USERS.filter(u=>getUserParties(u).includes(activePartyId));
+  const withAvail=usersInEvent.filter(u=>S.availability[u.name]?.ranges?.length>0).length;
+  const withRanks=usersInEvent.filter(u=>S.actRankings[u.name]?.length>0).length;
+  const best=calcBestOverlap();
+  stats.innerHTML=`
+    <div class="stat-row"><span class="stat-lbl">Availability submitted</span><span class="stat-val">${withAvail}/${usersInEvent.length}</span></div>
+    <div class="stat-row"><span class="stat-lbl">Activities ranked</span><span class="stat-val">${withRanks}/${usersInEvent.length}</span></div>
+    <div class="stat-row"><span class="stat-lbl">Best overlap</span><span class="stat-val">${best?fmtDate(best.start)+' – '+fmtDate(best.end):'—'}</span></div>
+    <div class="stat-row"><span class="stat-lbl">Top ranked activity</span><span class="stat-val">${getTopActivity()||'—'}</span></div>`;
+  // heatmap
+  heat.innerHTML='';
+  const allR=[]; usersInEvent.forEach(u=>{const av=S.availability[u.name];if(av?.ranges)av.ranges.forEach(r=>allR.push({...r}));});
+  if(!allR.length){heat.innerHTML='<div style="font-size:.74rem;color:var(--muted2)">No availability yet</div>';return;}
+  const uniq=[];
+  usersInEvent.forEach(u=>{const av=S.availability[u.name];if(av?.ranges)av.ranges.forEach(r=>{if(!uniq.find(x=>x.start===r.start&&x.end===r.end))uniq.push({...r});});});
+  uniq.sort((a,b)=>a.start.localeCompare(b.start));
+  uniq.slice(0,8).forEach(r=>{
+    let cnt=0;usersInEvent.forEach(u=>{const av=S.availability[u.name];if(av?.ranges)for(const r2 of av.ranges)if(r2.start<=r.end&&r2.end>=r.start){cnt++;break;}});
+    const pct=usersInEvent.length?cnt/usersInEvent.length:0;
+    const col=pct>.66?'#e0e0e0':pct>.33?'#888':'#444';
+    heat.innerHTML+=`<div class="heat-row"><span class="heat-lbl">${fmtDate(r.start)}</span><div class="heat-wrap"><div class="heat-fill" style="width:${pct*100}%;background:${col}"></div></div><span class="heat-cnt">${cnt}/${usersInEvent.length}</span></div>`;
+  });
+}
+
+function getTopActivity(){
+  if(!S.activities.length) return null;
+  const scores={};
+  S.activities.forEach(a=>scores[a.id]=[]);
+  Object.values(S.actRankings).forEach(ranks=>{
+    ranks.forEach((id,i)=>{ if(scores[id]) scores[id].push(i+1); });
+  });
+  let best=null,bestAvg=9999;
+  S.activities.forEach(a=>{
+    const v=scores[a.id];
+    if(!v.length) return;
+    const avg=v.reduce((x,y)=>x+y,0)/v.length;
+    if(avg<bestAvg){bestAvg=avg;best=a.name;}
+  });
+  return best;
+}
+
+// ═══════════════════════════════════════════════════════
+//  ADMIN: CREATE EVENT
+// ═══════════════════════════════════════════════════════
+async function createEvent(){
+  const pid=document.getElementById('create-party-id').value.trim();
+  const name=document.getElementById('create-event-name').value.trim();
+  if(!pid){document.getElementById('create-party-id').focus();return;}
+  if(!name){document.getElementById('create-event-name').value=pid;} // default name = id
+  if(!/^[a-z0-9-]+$/.test(pid)){alert('Use lowercase letters, numbers and hyphens only.');return;}
+  if(allPartyIds.includes(pid)){alert('An event with that ID already exists.');return;}
+  document.getElementById('loading-overlay').classList.remove('hidden');
+  setLoading('Creating '+pid+'...');
+  try{
+    const newParty={...EMPTY_PARTY, tripName:name||pid};
+    await sheetsCall('setState',{partyId:pid,state:newParty});
+    document.getElementById('create-party-id').value='';
+    document.getElementById('create-event-name').value='';
+    await loadPartyIds();
+    await openEventDetail(pid);
+  }catch(e){hideLoading();alert('Failed to create event: '+e.message);}
+}
+
+function sanitizePartyId(inp){inp.value=inp.value.toLowerCase().replace(/[^a-z0-9-]/g,'');}
+
+// ═══════════════════════════════════════════════════════
+//  ADMIN: CALENDAR RANGE
+// ═══════════════════════════════════════════════════════
+function saveCalRange(){
+  const start=document.getElementById('detail-cal-start').value;
+  const end=document.getElementById('detail-cal-end').value;
+  if(!start||!end){alert('Please set both dates.');return;}
+  if(start>=end){alert('Start must be before end.');return;}
+  S.calStart=start; S.calEnd=end;
+  const s=getCalStart(); calYear=s.getFullYear(); calMonth=s.getMonth();
+  saveState(); updateCalPreview();
+  const btn=event.target; btn.textContent='Saved ✓'; setTimeout(()=>btn.textContent='Save Range',1500);
+}
+function updateCalPreview(){
+  const start=document.getElementById('detail-cal-start')?.value;
+  const end=document.getElementById('detail-cal-end')?.value;
+  const el=document.getElementById('detail-cal-preview'); if(!el)return;
+  if(start&&end){
+    const s=new Date(start),e=new Date(end);
+    const mo=Math.round((e-s)/(1000*60*60*24*30.4));
+    el.textContent=MONTHS[s.getMonth()]+' '+s.getFullYear()+' → '+MONTHS[e.getMonth()]+' '+e.getFullYear()+' · ~'+mo+' month'+(mo!==1?'s':'');
+  } else el.textContent='';
+}
+
+// ═══════════════════════════════════════════════════════
+//  ADMIN: COUNTDOWN TIMER
+// ═══════════════════════════════════════════════════════
+function saveDeadline(){
+  const val=document.getElementById('detail-deadline').value;
+  S.deadline=val?new Date(val).toISOString():null;
+  saveState(); startAdminCd();
+  const btn=event.target; btn.textContent='Saved ✓'; setTimeout(()=>btn.textContent='Save Deadline',1500);
+}
+function startAdminCd(){
+  if(adminCdInterval) clearInterval(adminCdInterval);
+  const liveEl=document.getElementById('detail-cd-live');
+  const timeEl=document.getElementById('detail-cd-time');
+  if(!S.deadline){if(liveEl)liveEl.style.display='none';return;}
+  if(liveEl) liveEl.style.display='flex';
+  function tick(){
+    const diff=new Date(S.deadline)-new Date();
+    if(!timeEl)return;
+    if(diff<=0){timeEl.textContent='Time\'s up';return;}
+    timeEl.textContent=formatCountdown(diff);
+  }
+  tick();
+  adminCdInterval=setInterval(tick,1000);
+}
+
+function formatCountdown(ms){
+  const s=Math.floor(ms/1000);
+  const d=Math.floor(s/86400),h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60),sec=s%60;
+  if(d>0) return `${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(sec).padStart(2,'0')}s`;
+  return `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(sec).padStart(2,'0')}s`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  ADMIN: PARTY ACCESS MODAL
+// ═══════════════════════════════════════════════════════
+function openPartyAccessModal(){
+  const content=document.getElementById('mpa-content');content.innerHTML='';
+  USERS.filter(u=>u.role!=='admin').forEach(u=>{
+    const checked=getUserParties(u).includes(activePartyId);
+    const row=document.createElement('div'); row.className='chk-row';
+    row.innerHTML=`<div><div class="chk-lbl">${esc(u.name)}</div>
+      ${u.email?`<div style="font-size:.66rem;color:var(--muted)">${esc(u.email)}</div>`:''}
+      </div>
+      <div class="chk-box${checked?' chk':''}" data-uid="${esc(u.name)}" onclick="toggleChk(this)">${checked?'✓':''}</div>`;
+    content.appendChild(row);
+  });
+  openModal('modal-party-access');
+}
+function toggleChk(el){const c=el.classList.toggle('chk');el.textContent=c?'✓':'';}
+function savePartyAccess(){
+  const checked=Array.from(document.querySelectorAll('#mpa-content .chk-box.chk')).map(el=>el.dataset.uid);
+  USERS.forEach(u=>{
+    if(u.role==='admin') return;
+    const parties=getUserParties(u).filter(p=>p!==activePartyId);
+    if(checked.includes(u.name)) parties.push(activePartyId);
+    u.parties=parties;
+  });
+  saveUsers(); closeModal('modal-party-access'); renderDetailUsersChips();
+}
+// wire up the Edit button
+document.getElementById('modal-party-access').addEventListener('click', function(e){});
+document.querySelector('[onclick="openModal(\'modal-party-access\')"]')?.addEventListener('click', openPartyAccessModal);
+
+// ═══════════════════════════════════════════════════════
+//  ADMIN: LOCKS
+// ═══════════════════════════════════════════════════════
+function toggleLock(key){S.locks[key]=!S.locks[key];updateLockToggle(key);saveState();}
+function updateLockToggle(key){
+  const id=key==='avail'?'lock-avail':'lock-acts';
+  const btn=document.getElementById(id); if(!btn)return;
+  const unlocked=!S.locks[key];
+  btn.classList.toggle('on',unlocked); btn.classList.toggle('off',!unlocked);
+}
+
+// ═══════════════════════════════════════════════════════
+//  ADMIN: FINAL PAGE
+// ═══════════════════════════════════════════════════════
+function renderFinalPage(){
+  // Availability heat
+  const heat=document.getElementById('final-avail-heat');
+  const usersInEvent=USERS.filter(u=>getUserParties(u).includes(activePartyId));
+  heat.innerHTML='';
+  const allR=[]; usersInEvent.forEach(u=>{const av=S.availability[u.name];if(av?.ranges)av.ranges.forEach(r=>allR.push({...r}));});
+  if(!allR.length){heat.innerHTML='<div style="font-size:.76rem;color:var(--muted2)">No availability submitted</div>';}
+  const uniq=[];
+  usersInEvent.forEach(u=>{const av=S.availability[u.name];if(av?.ranges)av.ranges.forEach(r=>{if(!uniq.find(x=>x.start===r.start&&x.end===r.end))uniq.push({...r});});});
+  uniq.sort((a,b)=>{
+    let ca=0,cb=0;
+    usersInEvent.forEach(u=>{const av=S.availability[u.name];if(av?.ranges){for(const r of av.ranges)if(r.start<=a.end&&r.end>=a.start){ca++;break;}}});
+    usersInEvent.forEach(u=>{const av=S.availability[u.name];if(av?.ranges){for(const r of av.ranges)if(r.start<=b.end&&r.end>=b.start){cb++;break;}}});
+    return cb-ca;
+  });
+  uniq.slice(0,10).forEach(r=>{
+    let cnt=0;usersInEvent.forEach(u=>{const av=S.availability[u.name];if(av?.ranges)for(const r2 of av.ranges)if(r2.start<=r.end&&r2.end>=r.start){cnt++;break;}});
+    const pct=usersInEvent.length?cnt/usersInEvent.length:0;
+    const col=pct>.66?'#e0e0e0':pct>.33?'#888':'#444';
+    heat.innerHTML+=`<div class="heat-row"><span class="heat-lbl">${fmtDate(r.start)} – ${fmtDate(r.end)}</span><div class="heat-wrap"><div class="heat-fill" style="width:${pct*100}%;background:${col}"></div></div><span class="heat-cnt">${cnt}/${usersInEvent.length}</span></div>`;
+  });
+
+  // Rankings
+  const rankDiv=document.getElementById('final-rankings');
+  rankDiv.innerHTML='';
+  const scored=getActivityScores();
+  scored.slice(0,10).forEach((item,i)=>{
+    const rc=i===0?'rsr-r1':i===1?'rsr-r2':i===2?'rsr-r3':'';
+    rankDiv.innerHTML+=`<div class="rank-summary-row"><div class="rsr-rank ${rc}">${i+1}</div><div class="rsr-name">${esc(item.name)}</div><div class="rsr-score">avg #${item.avgRank.toFixed(1)}</div></div>`;
+  });
+  if(!scored.length) rankDiv.innerHTML='<div style="font-size:.76rem;color:var(--muted2)">No rankings submitted</div>';
+
+  // Final activity dropdown
+  const sel=document.getElementById('final-act-sel');
+  sel.innerHTML='<option value="">— Select activity —</option>';
+  S.activities.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=a.name;sel.appendChild(o);});
+  if(S.pushData.actId) sel.value=S.pushData.actId;
+  const dd=document.getElementById('final-dates-display');
+  dd.textContent=S.pushData.dates||'Tap to select from availability...';
+  dd.style.color=S.pushData.dates?'var(--text2)':'var(--muted2)';
+  const msg=document.getElementById('final-message');
+  if(msg) msg.value=S.pushData.message||'';
+  const pb=document.getElementById('push-btn');
+  if(S.pushed){pb.textContent='✅ Pushed to group';pb.classList.add('pushed');}
+  else{pb.textContent='🚀 Push to Group';pb.classList.remove('pushed');}
+
+  // date picker modal
+  const datelist=document.getElementById('modal-date-list');datelist.innerHTML='';
+  allR.forEach(r=>{
+    const btn=document.createElement('button');
+    btn.className='btn-g';btn.style.cssText='width:100%;margin-bottom:6px;text-align:left;';
+    btn.textContent=fmtDate(r.start)+' – '+fmtDate(r.end)+(r.user?' ('+r.user+')':'');
+    btn.onclick=()=>{
+      const dd2=document.getElementById('final-dates-display');
+      dd2.textContent=fmtDate(r.start)+' – '+fmtDate(r.end);
+      dd2.style.color='var(--text2)';
+      closeModal('modal-date-pick');
+    };
+    datelist.appendChild(btn);
+  });
+}
+
+function getActivityScores(){
+  const scores={};
+  S.activities.forEach(a=>scores[a.id]=[]);
+  Object.values(S.actRankings).forEach(ranks=>{
+    ranks.forEach((id,i)=>{if(scores[id]!==undefined)scores[id].push(i+1);});
+  });
+  return S.activities.map(a=>{
+    const v=scores[a.id];
+    return {id:a.id,name:a.name,avgRank:v.length?v.reduce((x,y)=>x+y,0)/v.length:999};
+  }).sort((a,b)=>a.avgRank-b.avgRank);
+}
+
+function pushToGroup(){
+  const actId=parseInt(document.getElementById('final-act-sel').value);
+  if(!actId){alert('Please select a final activity');return;}
+  S.pushData.actId=actId;
+  S.pushData.dates=document.getElementById('final-dates-display').textContent.replace('Tap to select from availability...','').trim();
+  S.pushData.message=document.getElementById('final-message').value.trim();
+  S.pushed=true;
+  saveState();
+  const pb=document.getElementById('push-btn');pb.textContent='✅ Pushed to group';pb.classList.add('pushed');
+}
+
+// ═══════════════════════════════════════════════════════
+//  ADMIN: USERS
+// ═══════════════════════════════════════════════════════
+function renderAdminUserList(){
+  const list=document.getElementById('admin-user-list'); if(!list)return;
+  list.innerHTML='';
+  USERS.forEach((u,i)=>{
+    if(u.role==='admin') return; // admin not listed
+    const row=document.createElement('div'); row.className='usr-row';
+    const parties=getUserParties(u).join(', ')||'No events';
+    row.innerHTML=`<div class="usr-av uc${i%8}">${u.name[0]}</div>
+      <div class="usr-info">
+        <div class="usr-name">${esc(u.name)}</div>
+        <div class="usr-email">${esc(u.email||'No email')}</div>
+        <div class="usr-events">${esc(parties)}</div>
+      </div>
+      <div class="usr-actions">
+        <button class="usr-btn invite" onclick="sendInvite('${esc(u.name)}')">&#9993; Invite</button>
+        <button class="usr-btn" onclick="openEditUser('${esc(u.name)}')">&#9998;</button>
+        <button class="usr-btn" style="color:#a84040;border-color:rgba(180,60,60,.25)" onclick="removeUser('${esc(u.name)}')">&#10005;</button>
+      </div>`;
+    list.appendChild(row);
+  });
+  // populate admin profile edit modal select
+  const sel=document.getElementById('admin-profile-user-sel');
+  if(sel){
+    sel.innerHTML='';
+    USERS.filter(u=>u.role!=='admin').forEach(u=>{
+      const o=document.createElement('option');o.value=u.name;o.textContent=u.name;sel.appendChild(o);
+    });
+    loadAdminProfileEdit();
+  }
+}
+
+function sendInvite(uname){
+  const u=USERS.find(x=>x.name===uname); if(!u)return;
+  const appLink=window.location.href;
+  const subject=`You're invited to ${S?.tripName||'Party Planner'}`;
+  const body=`Hey ${u.name}!%0A%0AYou've been invited to use our party planning app.%0A%0AHere's how to sign in:%0ALink: ${appLink}%0AName: ${u.name}%0APassword: ${u.password}%0A%0ASee you there!`;
+  window.open(`mailto:${u.email||''}?subject=${encodeURIComponent(subject)}&body=${body}`);
+}
+
+function copyAppLink(){
+  const link=window.location.href;
+  navigator.clipboard.writeText(link).then(()=>{
+    const btn=document.getElementById('copy-link-btn');
+    btn.classList.add('copied');
+    btn.textContent='✓ Link copied!';
+    setTimeout(()=>{btn.classList.remove('copied');btn.innerHTML='&#128279; Copy App Link';},2000);
+  }).catch(()=>{ prompt('Copy this link:',link); });
+}
+
+function addUser(){
+  const name=document.getElementById('nu-name').value.trim();
+  const pass=document.getElementById('nu-pass').value;
+  const email=document.getElementById('nu-email').value.trim();
+  if(!name||!pass){alert('Name and password required');return;}
+  if(USERS.find(u=>u.name.toLowerCase()===name.toLowerCase())){alert('Name already exists');return;}
+  USERS.push({name,password:pass,email,role:'guest',city:'',bio:'',tags:[],parties:[]});
+  saveUsers(); closeModal('modal-add-user'); renderAdminUserList();
+  document.getElementById('nu-name').value='';
+  document.getElementById('nu-pass').value='';
+  document.getElementById('nu-email').value='';
+}
+
+function openEditUser(uname){
+  editingUserId=uname;
+  const u=USERS.find(x=>x.name===uname); if(!u)return;
+  document.getElementById('edit-user-sub').textContent='Editing: '+uname;
+  document.getElementById('eu-pass').value='';
+  document.getElementById('eu-email').value=u.email||'';
+  openModal('modal-edit-user');
+}
+function saveEditUser(){
+  const u=USERS.find(x=>x.name===editingUserId); if(!u)return;
+  const newPass=document.getElementById('eu-pass').value;
+  if(newPass) u.password=newPass;
+  u.email=document.getElementById('eu-email').value.trim();
+  saveUsers(); closeModal('modal-edit-user'); renderAdminUserList();
+}
+
+function removeUser(uname){
+  if(!confirm(`Remove ${uname}?`))return;
+  USERS=USERS.filter(u=>u.name!==uname);
+  saveUsers(); renderAdminUserList();
+}
+
+function loadAdminProfileEdit(){
+  const sel=document.getElementById('admin-profile-user-sel');
+  const area=document.getElementById('admin-profile-fields');
+  if(!sel||!area)return;
+  const u=USERS.find(x=>x.name===sel.value); if(!u)return;
+  area.innerHTML=`
+    <div class="fl"><label class="fl-label">City</label><input class="fi" id="apf-city" value="${esc(u.city||'')}" placeholder="e.g. Austin, TX"/></div>
+    <div class="fl"><label class="fl-label">Bio</label><textarea class="fi" id="apf-bio" style="min-height:50px">${esc(u.bio||'')}</textarea></div>
+    <div class="fl"><label class="fl-label">Tags</label><input class="fi" id="apf-tags" value="${esc((u.tags||[]).join(', '))}" placeholder="&#127936; NBA, &#127829; Food"/></div>`;
+}
+function saveAdminProfile(){
+  const sel=document.getElementById('admin-profile-user-sel'); if(!sel)return;
+  const u=USERS.find(x=>x.name===sel.value); if(!u)return;
+  u.city=document.getElementById('apf-city').value.trim();
+  u.bio=document.getElementById('apf-bio').value.trim();
+  u.tags=document.getElementById('apf-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  saveUsers(); closeModal('modal-profile-edit');
+}
+
+// ═══════════════════════════════════════════════════════
+//  GUEST: TABS + PARTY SWITCHING
+// ═══════════════════════════════════════════════════════
+function switchGuestTab(name, btn){
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.querySelectorAll('#view-guest .panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name)?.classList.add('active');
+  // scroll to top
+  const panel=document.getElementById('panel-'+name);
+  if(panel) panel.scrollTop=0;
+  if(name==='home')         renderHome();
+  if(name==='availability') renderAvailability();
+  if(name==='activities')   renderGuestActivities();
+  if(name==='overview')     renderOverview();
+  if(name==='profile')      renderProfileEdit();
+}
+
 function openSwitcher(){
-  const list=document.getElementById('sw-party-list');list.innerHTML='';
+  const list=document.getElementById('sw-party-list'); list.innerHTML='';
   getUserParties(currentUser).forEach(pid=>{
     const isCur=pid===activePartyId;
-    const div=document.createElement('div');
-    div.className='sw-party'+(isCur?' sw-active':'');
-    div.innerHTML=`<div class="sw-dot ${isCur?'on':'off'}"></div><div style="flex:1"><div class="sw-pname${isCur?' cur':''}">${esc(pid)}</div></div>${isCur?'<span class="sw-pbadge">Viewing</span>':`<button class="sw-pgo" onclick="switchParty('${esc(pid)}')">Switch</button>`}`;
+    const div=document.createElement('div'); div.className='sw-party'+(isCur?' sw-active':'');
+    div.innerHTML=`<div class="sw-dot ${isCur?'on':'off'}"></div>
+      <div style="flex:1"><div class="sw-pname${isCur?' cur':''}">${esc(pid)}</div></div>
+      ${isCur?'<span class="sw-pbadge">Viewing</span>':`<button class="sw-pgo" onclick="switchParty('${esc(pid)}')">Switch</button>`}`;
     list.appendChild(div);
   });
   document.getElementById('sw-overlay').classList.add('open');
@@ -1166,70 +2106,81 @@ async function switchParty(pid){
   document.getElementById('loading-overlay').classList.remove('hidden');
   setLoading('Switching to '+pid+'...');
   await loadParty(pid);
-  activePartyId=pid;expandedActs={};
-  document.getElementById('topbar-title').textContent=S.tripName;
+  activePartyId=pid; expandedActs={};
+  ensureUserRankings();
+  document.title=S.tripName||'Party Planner';
+  document.getElementById('guest-topbar-title').textContent=S.tripName;
   document.getElementById('party-sw-label').textContent=S.tripName||pid;
-  document.getElementById('tab-overview').style.display=(currentUser.role==='admin'||S.pushed)?'':'none';
-  hideLoading();setSyncStatus('synced','Connected · '+pid);
-  if(currentUser.role==='admin'){document.getElementById('admin-cur-pid').textContent=pid;populateAdminSelects();}
-  switchTab('home',document.querySelector('[data-tab=home]'));
+  document.getElementById('tab-overview').style.display=S.pushed?'':'none';
+  updateCountdownBanner();
+  hideLoading(); setSyncStatus('synced','Connected · '+pid);
+  switchGuestTab('home',document.querySelector('[data-tab=home]'));
 }
 
-// ═══════════════════════════════════
-//  TABS
-// ═══════════════════════════════════
-function switchTab(name,btn){
-  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-  if(btn)btn.classList.add('active');
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('panel-'+name)?.classList.add('active');
-  if(name==='home')renderHome();
-  if(name==='availability')renderAvailability();
-  if(name==='activities')renderActivities();
-  if(name==='overview')renderOverview();
-  if(name==='admin')renderAdmin();
-  if(name==='profile')renderProfileEdit();
+// ═══════════════════════════════════════════════════════
+//  GUEST: COUNTDOWN BANNER
+// ═══════════════════════════════════════════════════════
+function updateCountdownBanner(){
+  const banner=document.getElementById('cd-banner');
+  const timeEl=document.getElementById('cd-time');
+  const labelEl=document.getElementById('cd-label');
+  if(!banner) return;
+  if(cdInterval) clearInterval(cdInterval);
+  if(!S.deadline){banner.style.display='none';return;}
+  banner.style.display='flex';
+  function tick(){
+    const diff=new Date(S.deadline)-new Date();
+    if(diff<=0){
+      banner.classList.add('expired');
+      timeEl.textContent="Time's up";
+      labelEl.textContent='';
+      clearInterval(cdInterval);
+    } else {
+      banner.classList.remove('expired');
+      timeEl.textContent=formatCountdown(diff);
+      labelEl.textContent='left to submit';
+    }
+  }
+  tick();
+  cdInterval=setInterval(tick,1000);
 }
 
-// ═══════════════════════════════════
-//  HOME / MAP
-// ═══════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//  GUEST: HOME / MAP
+// ═══════════════════════════════════════════════════════
 function renderHome(){
   document.getElementById('home-title').textContent=`Hey ${currentUser.name} 👋`;
-  document.getElementById('home-sub').textContent=`${USERS.length} people · tap a dot to see who's coming from where`;
-  renderMap();renderCrewStrip();
+  const inEvent=USERS.filter(u=>getUserParties(u).includes(activePartyId)||u.role==='admin'?false:getUserParties(u).includes(activePartyId));
+  // show all users assigned to this party
+  const partyUsers=USERS.filter(u=>getUserParties(u).includes(activePartyId)||u.name===currentUser.name);
+  document.getElementById('home-sub').textContent=`${partyUsers.length} people · tap a dot to see who's coming from where`;
+  renderMap(partyUsers); renderCrewStrip(partyUsers);
 }
 
-function renderMap(){
-  const pins=document.getElementById('map-pins');
-  const conn=document.getElementById('map-connectors');
-  pins.innerHTML='';conn.innerHTML='';
-  const coords=[];
-  USERS.forEach((u,i)=>{
-    const xy=getCityCoords(u.city);if(!xy)return;
+function renderMap(partyUsers){
+  const pins=document.getElementById('map-pins'); pins.innerHTML='';
+  const imgEl=document.getElementById('map-img');
+  if(!imgEl) return;
+  activeBioUser=null;
+  document.getElementById('bio-popup').style.display='none';
+  partyUsers.forEach((u,i)=>{
+    const xy=getCityCoords(u.city); if(!xy)return;
     const col=UC[i%UC.length];
-    coords.push({u,i,xy,col});
-    const pin=document.createElement('div');
-    pin.className='map-pin';
-    pin.style.left=xy[0]+'%';pin.style.top=xy[1]+'%';
-    pin.innerHTML=`<div class="map-pin-pulse" style="background:${col}"></div><div class="map-pin-dot" style="background:${col}"></div>`;
-    pin.addEventListener('click',e=>{e.stopPropagation();showBio(u,i,xy);});
+    const pin=document.createElement('div'); pin.className='map-pin';
+    // map image is 626x626 but displayed at container width
+    // use percentage coords from our lookup table
+    pin.style.left=xy[0]+'%'; pin.style.top=xy[1]+'%';
+    pin.innerHTML=`<div class="map-pin-pulse" style="background:${col}"></div>
+      <div class="map-pin-dot" style="background:${col}"></div>`;
+    pin.addEventListener('click',e=>{e.stopPropagation();showBio(u,i,xy,partyUsers);});
     pins.appendChild(pin);
   });
-  for(let a=0;a<coords.length;a++)for(let b=a+1;b<coords.length;b++){
-    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
-    line.setAttribute('x1',coords[a].xy[0]+'%');line.setAttribute('y1',coords[a].xy[1]+'%');
-    line.setAttribute('x2',coords[b].xy[0]+'%');line.setAttribute('y2',coords[b].xy[1]+'%');
-    line.setAttribute('stroke','#1e1e1e');line.setAttribute('stroke-width','0.8');
-    line.setAttribute('stroke-dasharray','3,4');
-    conn.appendChild(line);
-  }
   document.getElementById('map-outer').addEventListener('click',()=>{
-    document.getElementById('bio-popup').style.display='none';activeBioUser=null;
-  });
+    document.getElementById('bio-popup').style.display='none'; activeBioUser=null;
+  },{once:false});
 }
 
-function showBio(user,idx,xy){
+function showBio(user,idx,xy,partyUsers){
   if(activeBioUser===user.name){document.getElementById('bio-popup').style.display='none';activeBioUser=null;return;}
   activeBioUser=user.name;
   const col=UC[idx%UC.length],fg=UFG[idx%UFG.length];
@@ -1243,34 +2194,36 @@ function showBio(user,idx,xy){
     </div>
     ${user.bio?`<div class="bio-quote">"${esc(user.bio)}"</div>`:'<div class="bio-quote" style="color:var(--muted2);font-style:normal">No bio yet</div>'}
     <div class="bio-tags">${(user.tags||[]).map(t=>`<span class="bio-tag">${esc(t)}</span>`).join('')}</div>
-    ${isSelf?`<a class="bio-edit" href="#" onclick="switchTab('profile',null);return false;">✏️ Edit your profile</a>`:''}`;
+    ${isSelf?`<a class="bio-edit" href="#" onclick="switchGuestTab('profile',null);return false;">✏️ Edit your profile</a>`:''}`;
   popup.style.display='block';
   const outer=document.getElementById('map-outer');
   const ow=outer.offsetWidth,oh=outer.offsetHeight;
-  const px=xy[0]/100*ow,py=xy[1]/100*oh;
-  let left=px-82,top=py-174;
-  if(top<4)top=py+14;if(left<4)left=4;
-  if(left+164>ow-4)left=ow-168;
-  popup.style.left=left+'px';popup.style.top=top+'px';
+  const px=xy[0]/100*ow, py=xy[1]/100*oh;
+  let left=px-82, top=py-174;
+  if(top<4) top=py+14; if(left<4) left=4;
+  if(left+164>ow-4) left=ow-168;
+  popup.style.left=left+'px'; popup.style.top=top+'px';
 }
 
-function renderCrewStrip(){
-  const strip=document.getElementById('crew-strip');strip.innerHTML='';
-  USERS.forEach((u,i)=>{
+function renderCrewStrip(partyUsers){
+  const strip=document.getElementById('crew-strip'); strip.innerHTML='';
+  partyUsers.forEach((u,i)=>{
     const col=UC[i%UC.length];
-    const chip=document.createElement('div');chip.className='crew-chip';
-    chip.innerHTML=`<div class="crew-cdot" style="background:${col}"></div><span class="crew-cname">${esc(u.name)}</span><span class="crew-ccity">${esc(u.city||'?')}</span>`;
-    chip.addEventListener('click',()=>{const xy=getCityCoords(u.city);if(xy)showBio(u,i,xy);});
+    const chip=document.createElement('div'); chip.className='crew-chip';
+    chip.innerHTML=`<div class="crew-cdot" style="background:${col}"></div>
+      <span class="crew-cname">${esc(u.name)}</span>
+      <span class="crew-ccity">${esc(u.city||'?')}</span>`;
+    chip.addEventListener('click',()=>{const xy=getCityCoords(u.city);if(xy)showBio(u,i,xy,partyUsers);});
     strip.appendChild(chip);
   });
 }
 
-// ═══════════════════════════════════
-//  PROFILE
-// ═══════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//  GUEST: PROFILE
+// ═══════════════════════════════════════════════════════
 function renderProfileEdit(){
   const idx=USERS.findIndex(u=>u.name===currentUser.name);
-  const col=UC[idx%UC.length],fg=UFG[idx%UFG.length];
+  const col=UC[Math.max(0,idx)%UC.length],fg=UFG[Math.max(0,idx)%UFG.length];
   document.getElementById('prof-preview-card').innerHTML=`
     <div class="prof-av-lg" style="background:${col};color:${fg}">${currentUser.name[0]}</div>
     <div><div style="font-size:.92rem;font-weight:600;color:var(--white)">${esc(currentUser.name)}</div>
@@ -1279,7 +2232,6 @@ function renderProfileEdit(){
   document.getElementById('profile-bio').value=currentUser.bio||'';
   document.getElementById('profile-tags').value=(currentUser.tags||[]).join(', ');
 }
-
 function saveProfile(){
   const idx=USERS.findIndex(u=>u.name===currentUser.name);
   USERS[idx].city=document.getElementById('profile-city').value.trim();
@@ -1287,14 +2239,14 @@ function saveProfile(){
   USERS[idx].tags=document.getElementById('profile-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
   currentUser=USERS[idx];
   saveUsers();
-  switchTab('home',document.querySelector('[data-tab=home]'));
+  switchGuestTab('home',document.querySelector('[data-tab=home]'));
 }
 
-// ═══════════════════════════════════
-//  AVAILABILITY
-// ═══════════════════════════════════
-let calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
-let selAnchor=null,pendingRanges=[],rankMode=false;
+// ═══════════════════════════════════════════════════════
+//  GUEST: AVAILABILITY
+// ═══════════════════════════════════════════════════════
+let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
+let selAnchor=null, pendingRanges=[], rankMode=false;
 
 function getCalStart(){return new Date((S&&S.calStart)||'2026-04-01');}
 function getCalEnd(){return new Date((S&&S.calEnd)||'2026-07-18');}
@@ -1312,7 +2264,7 @@ function renderAvailability(){
   document.getElementById('avail-sub').textContent=`Mark all dates you could make it — ${currentUser.name}`;
   clampCal();
   const ua=S.availability[currentUser.name];
-  if(ua?.ranges?.length>0&&!rankMode)showSavedView();else showCalScreen();
+  if(ua?.ranges?.length>0&&!rankMode) showSavedView(); else showCalScreen();
 }
 
 function showCalScreen(){
@@ -1321,17 +2273,15 @@ function showCalScreen(){
   document.getElementById('avail-saved-view').style.display='none';
   document.getElementById('ranges-section').style.display='';
   const ua=S.availability[currentUser.name];
-  if(ua?.ranges)pendingRanges=ua.ranges.map(r=>({...r}));
-  renderCalendar();renderRangesList();
+  if(ua?.ranges) pendingRanges=ua.ranges.map(r=>({...r}));
+  renderCalendar(); renderRangesList();
 }
-
 function showSavedView(){
   document.getElementById('rank-screen').classList.remove('active');
   document.getElementById('ranges-section').style.display='none';
   document.getElementById('avail-saved-view').style.display='';
-  renderSavedAvailability();renderGroupOverlap();
+  renderSavedAvailability(); renderGroupOverlap();
 }
-
 function editAvailability(){
   document.getElementById('avail-saved-view').style.display='none';
   pendingRanges=[...(S.availability[currentUser.name]?.ranges||[])];
@@ -1343,22 +2293,22 @@ function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}clampCal();r
 
 function renderCalendar(){
   document.getElementById('cal-month-lbl').textContent=MONTHS[calMonth]+' '+calYear;
-  const grid=document.getElementById('cal-grid');grid.innerHTML='';
+  const grid=document.getElementById('cal-grid'); grid.innerHTML='';
   ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d=>{const e=document.createElement('div');e.className='cal-dow';e.textContent=d;grid.appendChild(e);});
   const fd=new Date(calYear,calMonth,1).getDay(),dim=new Date(calYear,calMonth+1,0).getDate();
-  const today=new Date();today.setHours(0,0,0,0);
+  const today=new Date(); today.setHours(0,0,0,0);
   for(let i=0;i<fd;i++){const e=document.createElement('div');e.className='cal-day om';grid.appendChild(e);}
   for(let d=1;d<=dim;d++){
     const date=new Date(calYear,calMonth,d),ds=toDS(date);
-    const el=document.createElement('div');el.className='cal-day cm';el.textContent=d;
+    const el=document.createElement('div'); el.className='cal-day cm'; el.textContent=d;
     if(date<today||date>getCalEnd()){el.classList.add('past');grid.appendChild(el);continue;}
     const rc=getRangeCls(ds);
-    if(rc)rc.split(' ').forEach(c=>el.classList.add(c));
+    if(rc) rc.split(' ').forEach(c=>el.classList.add(c));
     if(selAnchor){
-      if(ds===selAnchor)el.classList.add('sel-anc');
-      else if(new Date(ds)>new Date(selAnchor)&&!rc)el.classList.add('selecting');
+      if(ds===selAnchor) el.classList.add('sel-anc');
+      else if(new Date(ds)>new Date(selAnchor)&&!rc) el.classList.add('selecting');
     }
-    if(isToday(date))el.classList.add('td');
+    if(isToday(date)) el.classList.add('td');
     el.addEventListener('click',()=>dayClick(ds));
     grid.appendChild(el);
   }
@@ -1367,10 +2317,10 @@ function renderCalendar(){
 function getRangeCls(ds){
   for(let ri=0;ri<Math.min(pendingRanges.length,5);ri++){
     const r=pendingRanges[ri];
-    if(ds===r.start&&ds===r.end)return`r${ri}-s r${ri}-e`;
-    if(ds===r.start)return`r${ri}-s`;
-    if(ds===r.end)return`r${ri}-e`;
-    if(ds>r.start&&ds<r.end)return`r${ri}-m`;
+    if(ds===r.start&&ds===r.end) return `r${ri}-s r${ri}-e`;
+    if(ds===r.start) return `r${ri}-s`;
+    if(ds===r.end)   return `r${ri}-e`;
+    if(ds>r.start&&ds<r.end) return `r${ri}-m`;
   }
   return null;
 }
@@ -1381,25 +2331,28 @@ function dayClick(ds){
     for(let ri=0;ri<pendingRanges.length;ri++){
       if(ds>=pendingRanges[ri].start&&ds<=pendingRanges[ri].end){pendingRanges.splice(ri,1);removed=true;break;}
     }
-    if(!removed)selAnchor=ds;
-  }else{
+    if(!removed) selAnchor=ds;
+  } else {
     let start=selAnchor,end=ds;
     if(start>end){const t=start;start=end;end=t;}
-    pendingRanges.push({start,end});selAnchor=null;
+    pendingRanges.push({start,end}); selAnchor=null;
   }
-  renderCalendar();renderRangesList();
+  renderCalendar(); renderRangesList();
 }
 
 function renderRangesList(){
-  const list=document.getElementById('ranges-list');list.innerHTML='';
+  const list=document.getElementById('ranges-list'); list.innerHTML='';
   document.getElementById('rng-count').textContent=pendingRanges.length>0?pendingRanges.length+' added':'';
   document.getElementById('add-rng-btn').style.display=pendingRanges.length>0&&!selAnchor?'':'none';
   const rb=document.getElementById('rank-btn');
   rb.disabled=pendingRanges.length===0;
   rb.textContent=pendingRanges.length===0?'Add ranges first':pendingRanges.length===1?'Save Availability →':'Rank My Availability →';
   pendingRanges.forEach((r,ri)=>{
-    const pill=document.createElement('div');pill.className='rng-pill';
-    pill.innerHTML=`<div class="rp-sw" style="background:${RC[ri%RC.length]}"></div><span class="rp-dates">${fmtDate(r.start)} – ${fmtDate(r.end)}</span><span class="rp-days">${daysB(r.start,r.end)} days</span><button class="rp-del" onclick="removeRange(${ri})">✕</button>`;
+    const pill=document.createElement('div'); pill.className='rng-pill';
+    pill.innerHTML=`<div class="rp-sw" style="background:${RC[ri%RC.length]}"></div>
+      <span class="rp-dates">${fmtDate(r.start)} – ${fmtDate(r.end)}</span>
+      <span class="rp-days">${daysB(r.start,r.end)} days</span>
+      <button class="rp-del" onclick="removeRange(${ri})">✕</button>`;
     list.appendChild(pill);
   });
 }
@@ -1416,10 +2369,10 @@ function showRankScreen(){
 }
 
 function renderRankList(){
-  const list=document.getElementById('rank-list');list.innerHTML='';
+  const list=document.getElementById('rank-list'); list.innerHTML='';
   pendingRanges.forEach((r,ri)=>{
     const nc=['rn0','rn1','rn2','rn3','rn4'][Math.min(ri,4)];
-    const item=document.createElement('div');item.className='rank-item';
+    const item=document.createElement('div'); item.className='rank-item';
     item.innerHTML=`<div class="rank-num ${nc}">${ri+1}</div>
       <div class="rank-dates"><div class="rank-dm">${fmtDate(r.start)} – ${fmtDate(r.end)}</div>
       <div class="rank-ds">${daysB(r.start,r.end)} days${ri===0?' · Most preferred':ri===pendingRanges.length-1?' · Least preferred':''}</div></div>
@@ -1432,467 +2385,309 @@ function renderRankList(){
 }
 
 function moveRank(ri,dir){
-  const ni=ri+dir;if(ni<0||ni>=pendingRanges.length)return;
+  const ni=ri+dir; if(ni<0||ni>=pendingRanges.length)return;
   [pendingRanges[ri],pendingRanges[ni]]=[pendingRanges[ni],pendingRanges[ri]];
   renderRankList();
 }
 
 function saveAvailability(){
   S.availability[currentUser.name]={ranges:pendingRanges.map(r=>({...r}))};
-  saveState();rankMode=false;
+  saveState(); rankMode=false;
   document.getElementById('rank-screen').classList.remove('active');
   showSavedView();
 }
 
 function renderSavedAvailability(){
   const ua=S.availability[currentUser.name];
-  const div=document.getElementById('avail-saved-ranges');div.innerHTML='';
+  const div=document.getElementById('avail-saved-ranges'); div.innerHTML='';
   document.getElementById('avail-saved-count').textContent=ua.ranges.length+' range'+(ua.ranges.length!==1?'s':'')+' saved';
-  const nav=document.createElement('div');nav.className='cal-nav-row';
-  nav.innerHTML=`<button class="cal-arr-btn" onclick="calPrev();renderSavedAvailability()">‹</button><span class="cal-month-lbl" id="saved-cal-lbl"></span><button class="cal-arr-btn" onclick="calNext();renderSavedAvailability()">›</button>`;
+  const nav=document.createElement('div'); nav.className='cal-nav-row';
+  nav.innerHTML=`<button class="cal-arr-btn" onclick="calPrev();renderSavedAvailability()">‹</button>
+    <span class="cal-month-lbl" id="saved-cal-lbl"></span>
+    <button class="cal-arr-btn" onclick="calNext();renderSavedAvailability()">›</button>`;
   div.appendChild(nav);
   setTimeout(()=>{const el=document.getElementById('saved-cal-lbl');if(el)el.textContent=MONTHS[calMonth]+' '+calYear;},0);
-  const mg=document.createElement('div');mg.className='cal-grid';mg.style.marginBottom='11px';
+  const mg=document.createElement('div'); mg.className='cal-grid'; mg.style.marginBottom='11px';
   ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d=>{const e=document.createElement('div');e.className='cal-dow';e.textContent=d;mg.appendChild(e);});
   const fd=new Date(calYear,calMonth,1).getDay(),dim=new Date(calYear,calMonth+1,0).getDate();
   const today=new Date();today.setHours(0,0,0,0);
   for(let i=0;i<fd;i++){const e=document.createElement('div');e.className='cal-day om';mg.appendChild(e);}
   for(let d=1;d<=dim;d++){
     const date=new Date(calYear,calMonth,d),ds=toDS(date);
-    const e=document.createElement('div');e.className='cal-day cm';e.textContent=d;
-    if(date<today||date>getCalEnd())e.classList.add('past');
+    const e=document.createElement('div'); e.className='cal-day cm'; e.textContent=d;
+    if(date<today||date>getCalEnd()) e.classList.add('past');
     let rc=null;
     ua.ranges.forEach((r,ri)=>{
-      if(ds===r.start&&ds===r.end)rc=`r${ri}-s r${ri}-e`;
-      else if(ds===r.start)rc=`r${ri}-s`;
-      else if(ds===r.end)rc=`r${ri}-e`;
-      else if(ds>r.start&&ds<r.end)rc=`r${ri}-m`;
+      if(ds===r.start&&ds===r.end) rc=`r${ri}-s r${ri}-e`;
+      else if(ds===r.start) rc=`r${ri}-s`;
+      else if(ds===r.end)   rc=`r${ri}-e`;
+      else if(ds>r.start&&ds<r.end) rc=`r${ri}-m`;
     });
-    if(rc)rc.split(' ').forEach(c=>e.classList.add(c));
-    if(isToday(date))e.classList.add('td');
+    if(rc) rc.split(' ').forEach(c=>e.classList.add(c));
+    if(isToday(date)) e.classList.add('td');
     mg.appendChild(e);
   }
   div.appendChild(mg);
 }
 
 function renderGroupOverlap(){
-  const ol=document.getElementById('overlap-list');ol.innerHTML='';
-  USERS.forEach((u,ui)=>{
-    const av=S.availability[u.name];if(!av?.ranges?.length)return;
-    const row=document.createElement('div');row.className='ov-row';
+  const partyUsers=USERS.filter(u=>getUserParties(u).includes(activePartyId)||u.name===currentUser.name);
+  const ol=document.getElementById('overlap-list'); ol.innerHTML='';
+  partyUsers.forEach((u,ui)=>{
+    const av=S.availability[u.name]; if(!av?.ranges?.length)return;
+    const row=document.createElement('div'); row.className='ov-row';
     const dots=av.ranges.slice(0,5).map((_,ri)=>`<div class="ov-dot" style="background:${RC[ri%RC.length]}"></div>`).join('');
     const top=av.ranges[0];
-    row.innerHTML=`<div class="ov-av uc${ui%8}">${u.name[0]}</div><span class="ov-name">${esc(u.name)}</span><div class="ov-dots">${dots}</div>${top?`<span style="font-size:.6rem;color:var(--muted);background:var(--card2);border:1px solid var(--border);border-radius:4px;padding:1px 5px">#1: ${fmtDate(top.start)}</span>`:''}`;
+    row.innerHTML=`<div class="ov-av uc${ui%8}">${u.name[0]}</div>
+      <span class="ov-name">${esc(u.name)}</span>
+      <div class="ov-dots">${dots}</div>
+      ${top?`<span style="font-size:.6rem;color:var(--muted);background:var(--card2);border:1px solid var(--border);border-radius:4px;padding:1px 5px">#1: ${fmtDate(top.start)}</span>`:''}`;
     ol.appendChild(row);
   });
   const best=calcBestOverlap();
-  document.getElementById('best-overlap-card').innerHTML=best?`<div class="best-ov"><div class="best-lbl">Best overlap</div><div class="best-val">${fmtDate(best.start)} – ${fmtDate(best.end)}</div><div class="best-sub">${best.count} of ${USERS.length} people free</div></div>`:'';
+  document.getElementById('best-overlap-card').innerHTML=best
+    ?`<div class="best-ov"><div class="best-lbl">Best overlap</div><div class="best-val">${fmtDate(best.start)} – ${fmtDate(best.end)}</div><div class="best-sub">${best.count} of ${partyUsers.length} people free</div></div>`:''  ;
 }
 
 function calcBestOverlap(){
+  const partyUsers=USERS.filter(u=>getUserParties(u).includes(activePartyId)||u.name===currentUser.name);
   let best=null,bestCount=0;
-  USERS.forEach(u=>{
-    const av=S.availability[u.name];if(!av?.ranges?.length)return;
-    const r=av.ranges[0];let count=0;
-    USERS.forEach(u2=>{
-      const a2=S.availability[u2.name];if(!a2?.ranges)return;
-      for(const r2 of a2.ranges)if(r2.start<=r.end&&r2.end>=r.start){count++;break;}
+  partyUsers.forEach(u=>{
+    const av=S.availability[u.name]; if(!av?.ranges?.length)return;
+    const r=av.ranges[0]; let count=0;
+    partyUsers.forEach(u2=>{
+      const a2=S.availability[u2.name]; if(!a2?.ranges)return;
+      for(const r2 of a2.ranges) if(r2.start<=r.end&&r2.end>=r.start){count++;break;}
     });
     if(count>bestCount){bestCount=count;best={...r,count};}
   });
   return best;
 }
 
-// ═══════════════════════════════════
-//  ACTIVITIES
-// ═══════════════════════════════════
-function populateCatSelect(){
-  const s=document.getElementById('af-cat');s.innerHTML='';
-  CATS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;s.appendChild(o);});
+// ═══════════════════════════════════════════════════════
+//  GUEST: ACTIVITIES (RANKING)
+// ═══════════════════════════════════════════════════════
+function ensureUserRankings(){
+  if(!S||!currentUser) return;
+  const myRanks=S.actRankings[currentUser.name]||[];
+  const knownIds=new Set(myRanks);
+  const newActs=S.activities.filter(a=>!knownIds.has(a.id));
+  if(newActs.length>0){
+    S.actRankings[currentUser.name]=[...myRanks,...newActs.map(a=>a.id)];
+  }
+  // remove deleted acts
+  const validIds=new Set(S.activities.map(a=>a.id));
+  S.actRankings[currentUser.name]=(S.actRankings[currentUser.name]||[]).filter(id=>validIds.has(id));
 }
 
-function toggleAddForm(){
-  const f=document.getElementById('add-form');
+function toggleGuestAddForm(){
+  const f=document.getElementById('add-act-form');
   const open=f.classList.toggle('open');
-  document.getElementById('add-act-btn').textContent=open?'✕ Cancel':'+ Suggest';
+  document.getElementById('add-act-guest-btn').textContent=open?'✕ Cancel':'+ Suggest';
 }
 
-function submitActivity(){
+function submitGuestActivity(){
   const name=document.getElementById('af-name').value.trim();
   if(!name){document.getElementById('af-name').focus();return;}
-  S.activities.push({id:Date.now(),name,
-    category:document.getElementById('af-cat').value,
-    cost:parseInt(document.getElementById('af-cost').value)||0,
-    link:document.getElementById('af-link').value.trim(),
+  const newAct={id:Date.now(),name,
     desc:document.getElementById('af-desc').value.trim(),
-    addedBy:currentUser.name,votes:{},comments:[]});
+    cost:parseInt(document.getElementById('af-cost').value)||0,
+    addedBy:currentUser.name,comments:[]};
+  S.activities.push(newAct);
+  // add to bottom of EVERYONE's ranking list
+  USERS.forEach(u=>{
+    if(!S.actRankings[u.name]) S.actRankings[u.name]=[];
+    if(!S.actRankings[u.name].includes(newAct.id)) S.actRankings[u.name].push(newAct.id);
+  });
+  // ensure current user has it
+  ensureUserRankings();
   document.getElementById('af-name').value='';
   document.getElementById('af-desc').value='';
   document.getElementById('af-cost').value='';
-  document.getElementById('af-link').value='';
-  toggleAddForm();saveState();renderActivities();
+  toggleGuestAddForm();
+  saveState(); renderGuestActivities();
 }
 
-function actScore(a){
-  const m={...a.votes};
-  Object.entries(S.userVotes).forEach(([u,uv])=>{if(uv[a.id])m[u]=uv[a.id];});
-  const v=Object.values(m).filter(Boolean);
-  return v.length?Math.round(v.reduce((x,y)=>x+y,0)/v.length*10)/10:0;
-}
-function sortedActs(){return[...S.activities].sort((a,b)=>actScore(b)-actScore(a));}
-
-function renderActivities(){
+function renderGuestActivities(){
   const locked=S.locks.acts;
-  document.getElementById('act-locked').style.display=locked?'':'none';
-  document.getElementById('act-content').style.display=locked?'none':'';
+  document.getElementById('acts-locked').style.display=locked?'':'none';
+  document.getElementById('acts-content').style.display=locked?'none':'';
   if(locked)return;
-  const list=document.getElementById('activity-list');list.innerHTML='';
-  const sa=sortedActs();
-  if(!sa.length){list.innerHTML='<div class="empty-s"><div class="ei">🎉</div>No activities yet. Be the first to suggest one!</div>';return;}
-  const myV=S.userVotes[currentUser.name]||{};
-  sa.forEach((a,idx)=>{
-    const rank=idx+1,score=actScore(a),myR=myV[a.id]||0,isOpen=!!expandedActs[a.id];
-    const rc=rank===1?'ar1':rank===2?'ar2':rank===3?'ar3':'';
+  ensureUserRankings();
+  const myRanks=S.actRankings[currentUser.name]||[];
+  // get ordered list of activities
+  const orderedActs=myRanks.map(id=>S.activities.find(a=>a.id===id)).filter(Boolean);
+  // add any activities not yet in rankings (newly added by others)
+  S.activities.forEach(a=>{if(!myRanks.includes(a.id))orderedActs.push(a);});
+  const list=document.getElementById('acts-list'); list.innerHTML='';
+  if(!orderedActs.length){
+    list.innerHTML='<div class="empty-s"><div class="ei">🎉</div>No activities yet. Be the first to suggest one!</div>';
+    return;
+  }
+  orderedActs.forEach((a,idx)=>{
+    const isNew=!myRanks.includes(a.id);
+    const isOpen=!!expandedActs[a.id];
     const canDel=currentUser.role==='admin'||a.addedBy===currentUser.name;
-    const tv=new Set([...Object.keys(a.votes),...Object.keys(S.userVotes).filter(u=>S.userVotes[u][a.id])]).size;
-    const card=document.createElement('div');card.className='act-card';
-    const vbtns=[1,2,3,4,5].map(n=>`<button class="vbtn${myR===n?' sel':''}" onclick="castVote(${a.id},${n})">${n}</button>`).join('');
-    const chtml=a.comments.length===0?`<div style="font-size:.74rem;color:var(--muted2);margin-bottom:7px">No comments yet</div>`:a.comments.map(c=>`<div class="comment"><div class="c-av uc${USERS.findIndex(u=>u.name===c.author)%8}">${c.author[0]}</div><div class="c-bub"><div class="c-auth">${esc(c.author)}</div><div class="c-txt">${esc(c.text)}</div></div></div>`).join('');
+    const rank=idx+1;
+    const rc=rank===1?'arc-r1':rank===2?'arc-r2':rank===3?'arc-r3':'arc-r4';
+    const card=document.createElement('div');
+    card.className='act-rank-card'+(isNew?' new-act':'');
+    // comments
+    const chtml=a.comments?.length===0
+      ?`<div style="font-size:.74rem;color:var(--muted2);margin-bottom:7px">No comments yet</div>`
+      :(a.comments||[]).map(c=>{
+        const ui=USERS.findIndex(u=>u.name===c.author);
+        return `<div class="act-comment"><div class="ac-av uc${Math.max(0,ui)%8}">${c.author[0]}</div>
+          <div class="ac-bub"><div class="ac-auth">${esc(c.author)}</div>
+          <div class="ac-txt">${esc(c.text)}</div></div></div>`;
+      }).join('');
     card.innerHTML=`
-      <div class="act-head" onclick="toggleAct(${a.id})">
-        <div class="act-rank ${rc}">${rank}</div>
-        <div class="act-info"><div class="act-name">${esc(a.name)}</div><div class="act-cc">${esc(a.category)}${a.cost>0?' · $'+a.cost+'/person':''}</div></div>
-        <div class="act-score">${score>0?score:'—'}</div>
-        <div class="act-chev${isOpen?' open':''}">▼</div>
-      </div>
-      <div class="act-body${isOpen?' open':''}">
-        ${a.desc?`<div class="act-desc">${esc(a.desc)}</div>`:''}
-        <div class="act-meta">
-          ${a.cost>0?`<span class="mc">💸 <strong>$${a.cost}</strong>/person</span>`:''}
-          <span class="mc">👤 <strong>${esc(a.addedBy)}</strong></span>
-          <span class="mc">🗳️ <strong>${tv}</strong> vote${tv!==1?'s':''}</span>
-          ${a.link?`<a class="ml" href="${esc(a.link)}" target="_blank" rel="noopener">🔗 Link</a>`:''}
+      <div class="arc-head" onclick="toggleAct(${a.id})">
+        <div class="arc-rank ${rc}">${rank}</div>
+        <div class="arc-info">
+          <div class="arc-name">${esc(a.name)}</div>
+          <div class="arc-meta">${a.cost>0?'$'+a.cost+'/person':''}${a.addedBy?' · Added by '+esc(a.addedBy):''}</div>
         </div>
-        <div class="vote-row"><span class="vote-lbl">Your rating</span><div class="vote-btns">${vbtns}</div></div>
-        <div class="vbar-wrap"><div class="vbar-fill" style="width:${score/5*100}%"></div></div>
-        <div class="comments-lbl">Comments</div>${chtml}
-        <div class="ci-row"><input id="ci-${a.id}" placeholder="Add a comment..." onkeydown="if(event.key==='Enter')addComment(${a.id})"/><button class="btn-icon" onclick="addComment(${a.id})">→</button></div>
-        ${canDel?`<button class="btn-d" style="margin-top:9px" onclick="deleteAct(${a.id})">🗑 Remove</button>`:''}
+        ${isNew?'<span class="arc-new-badge">New ↕ rank me</span>':''}
+        <div class="arc-arrows">
+          <button class="arc-arrow" ${idx===0?'disabled':''} onclick="event.stopPropagation();moveAct(${a.id},-1)">▲</button>
+          <button class="arc-arrow" ${idx===orderedActs.length-1?'disabled':''} onclick="event.stopPropagation();moveAct(${a.id},1)">▼</button>
+        </div>
+      </div>
+      <div class="arc-body${isOpen?' open':''}">
+        ${a.desc?`<div class="arc-desc">${esc(a.desc)}</div>`:''}
+        <div class="act-comments-lbl">Comments</div>
+        ${chtml}
+        <div class="ac-input-row">
+          <input id="ci-${a.id}" placeholder="Add a comment..." onkeydown="if(event.key==='Enter')addComment(${a.id})"/>
+          <button class="btn-icon" onclick="addComment(${a.id})">→</button>
+        </div>
+        ${canDel?`<button class="btn-d" style="margin-top:9px" onclick="deleteGuestAct(${a.id})">🗑 Remove</button>`:''}
       </div>`;
     list.appendChild(card);
   });
 }
 
-function toggleAct(id){expandedActs[id]=!expandedActs[id];renderActivities();}
-function castVote(actId,rating){
-  if(!S.userVotes[currentUser.name])S.userVotes[currentUser.name]={};
-  S.userVotes[currentUser.name][actId]=rating;saveState();renderActivities();
-}
-function addComment(actId){
-  const inp=document.getElementById('ci-'+actId);
-  const text=(inp?.value||'').trim();if(!text)return;
-  const act=S.activities.find(a=>a.id===actId);
-  if(act)act.comments.push({author:currentUser.name,text});
-  inp.value='';saveState();renderActivities();
-}
-function deleteAct(actId){
-  S.activities=S.activities.filter(a=>a.id!==actId);
-  delete expandedActs[actId];saveState();renderActivities();
+function toggleAct(id){expandedActs[id]=!expandedActs[id];renderGuestActivities();}
+
+function moveAct(actId,dir){
+  ensureUserRankings();
+  const ranks=[...(S.actRankings[currentUser.name]||[])];
+  // ensure all acts in ranks
+  S.activities.forEach(a=>{if(!ranks.includes(a.id))ranks.push(a.id);});
+  const idx=ranks.indexOf(actId); if(idx<0)return;
+  const ni=idx+dir; if(ni<0||ni>=ranks.length)return;
+  [ranks[idx],ranks[ni]]=[ranks[ni],ranks[idx]];
+  S.actRankings[currentUser.name]=ranks;
+  saveState(); renderGuestActivities();
 }
 
-// ═══════════════════════════════════
-//  OVERVIEW
-// ═══════════════════════════════════
+function addComment(actId){
+  const inp=document.getElementById('ci-'+actId);
+  const text=(inp?.value||'').trim(); if(!text)return;
+  const act=S.activities.find(a=>a.id===actId);
+  if(act){
+    if(!act.comments) act.comments=[];
+    act.comments.push({author:currentUser.name,text});
+  }
+  inp.value=''; saveState(); renderGuestActivities();
+}
+
+function deleteGuestAct(actId){
+  S.activities=S.activities.filter(a=>a.id!==actId);
+  Object.keys(S.actRankings).forEach(u=>{
+    S.actRankings[u]=(S.actRankings[u]||[]).filter(id=>id!==actId);
+  });
+  delete expandedActs[actId];
+  saveState(); renderGuestActivities();
+}
+
+// ═══════════════════════════════════════════════════════
+//  GUEST: OVERVIEW
+// ═══════════════════════════════════════════════════════
 function renderOverview(){
-  const sa=sortedActs();
+  const partyUsers=USERS.filter(u=>getUserParties(u).includes(activePartyId)||u.name===currentUser.name);
   const best=calcBestOverlap();
-  const topScore=sa.length?Math.max(...sa.map(actScore)).toFixed(1):'—';
-  const uWithAv=Object.keys(S.availability).filter(u=>S.availability[u]?.ranges?.length>0).length;
+  const uWithAv=partyUsers.filter(u=>S.availability[u.name]?.ranges?.length>0).length;
+  const scored=getActivityScores();
   let html='';
   if(S.pushed&&S.pushData.actId){
     const fa=S.activities.find(a=>a.id===S.pushData.actId);
-    html+=`<div class="ann-banner"><div class="ann-ey">📣 It's official</div><div class="ann-title">${fa?esc(fa.name):'TBD'}</div><div class="ann-body">${esc(S.pushData.message||"The organizer has locked in the plan.")}</div><div class="ann-chips">${S.pushData.dates?`<span class="ann-chip">📅 ${esc(S.pushData.dates)}</span>`:''}${fa&&fa.cost>0?`<span class="ann-chip">💸 ~$${fa.cost}/person</span>`:''}</div></div>`;
+    html+=`<div class="ann-banner">
+      <div class="ann-ey">📣 It's official</div>
+      <div class="ann-title">${fa?esc(fa.name):'TBD'}</div>
+      <div class="ann-body">${esc(S.pushData.message||'The organizer has locked in the plan.')}</div>
+      <div class="ann-chips">
+        ${S.pushData.dates?`<span class="ann-chip">📅 ${esc(S.pushData.dates)}</span>`:''}
+        ${fa&&fa.cost>0?`<span class="ann-chip">💸 ~$${fa.cost}/person</span>`:''}
+      </div></div>`;
   }
-  html+=`<div class="ov-grid"><div class="ov-stat"><div class="ov-val">${USERS.length}</div><div class="ov-lbl">Crew</div></div><div class="ov-stat"><div class="ov-val">${S.activities.length}</div><div class="ov-lbl">Activities</div></div><div class="ov-stat"><div class="ov-val">${uWithAv}/${USERS.length}</div><div class="ov-lbl">Submitted dates</div></div><div class="ov-stat"><div class="ov-val">${topScore}</div><div class="ov-lbl">Top score</div></div></div>`;
-  if(sa[0])html+=`<div class="card" style="margin-bottom:10px"><div class="card-label">🥇 Top Rated</div><div style="font-weight:600;font-size:.9rem">${esc(sa[0].name)}</div><div style="font-size:.74rem;color:var(--muted);margin-top:2px">${esc(sa[0].category)}${sa[0].cost>0?' · $'+sa[0].cost+'/person':''} · Score ${actScore(sa[0])}/5</div></div>`;
-  if(best)html+=`<div class="card" style="margin-bottom:11px"><div class="card-label">📅 Best Dates</div><div style="font-weight:600;font-size:.9rem">${fmtDate(best.start)} – ${fmtDate(best.end)}</div><div style="font-size:.74rem;color:var(--muted);margin-top:2px">${best.count} of ${USERS.length} people free</div></div>`;
-  html+=`<div style="font-family:var(--fd);font-size:1.15rem;font-weight:700;color:var(--white);margin-bottom:7px">Availability Heatmap</div><div class="card"><div id="hm-content"></div></div>`;
-  html+=`<div style="font-family:var(--fd);font-size:1.15rem;font-weight:700;color:var(--white);margin:11px 0 7px">Rankings</div>`;
-  sa.forEach((a,i)=>{const s=actScore(a);html+=`<div class="act-card" style="margin-bottom:5px"><div class="act-head" style="cursor:default"><div class="act-rank ${i===0?'ar1':i===1?'ar2':i===2?'ar3':''}">${i+1}</div><div class="act-info"><div class="act-name">${esc(a.name)}</div><div class="act-cc">${esc(a.category)}${a.cost>0?' · $'+a.cost+'/person':''}</div></div><div class="act-score">${s>0?s:'—'}</div></div></div>`;});
+  html+=`<div class="ov-grid">
+    <div class="ov-stat"><div class="ov-val">${partyUsers.length}</div><div class="ov-lbl">Crew</div></div>
+    <div class="ov-stat"><div class="ov-val">${S.activities.length}</div><div class="ov-lbl">Activities</div></div>
+    <div class="ov-stat"><div class="ov-val">${uWithAv}/${partyUsers.length}</div><div class="ov-lbl">Submitted dates</div></div>
+    <div class="ov-stat"><div class="ov-val">${best?fmtDate(best.start).split(' ')[0]:'—'}</div><div class="ov-lbl">Best dates</div></div>
+  </div>`;
+  if(best) html+=`<div class="card" style="margin-bottom:11px"><div class="card-label">📅 Best Available Dates</div><div style="font-weight:600;font-size:.9rem">${fmtDate(best.start)} – ${fmtDate(best.end)}</div><div style="font-size:.74rem;color:var(--muted);margin-top:2px">${best.count} of ${partyUsers.length} people free</div></div>`;
+  html+=`<div style="font-family:var(--fd);font-size:1.2rem;font-weight:700;color:var(--white);margin-bottom:8px">Activity Rankings</div>`;
+  if(scored.length){
+    scored.forEach((item,i)=>{
+      const rc=i===0?'ar1':i===1?'ar2':i===2?'ar3':'';
+      html+=`<div style="display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px">
+        <div class="act-rank ${rc}" style="width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0;border:1px solid transparent">${i+1}</div>
+        <div style="flex:1"><div style="font-size:.88rem;font-weight:500">${esc(item.name)}</div></div>
+        <div style="font-size:.72rem;color:var(--muted)">avg #${item.avgRank.toFixed(1)}</div>
+      </div>`;
+    });
+  } else {
+    html+=`<div style="font-size:.76rem;color:var(--muted2)">No rankings yet</div>`;
+  }
+  html+=`<div style="font-family:var(--fd);font-size:1.2rem;font-weight:700;color:var(--white);margin:12px 0 8px">Availability Heatmap</div>
+    <div class="card"><div id="ov-heatmap"></div></div>`;
   document.getElementById('overview-content').innerHTML=html;
-  const hm=document.getElementById('hm-content');if(!hm)return;
-  const allR=[];USERS.forEach(u=>{const av=S.availability[u.name];if(av?.ranges)av.ranges.forEach(r=>allR.push({...r}));});
-  if(!allR.length){hm.innerHTML='<div style="font-size:.74rem;color:var(--muted2)">No availability submitted yet</div>';return;}
+  const hm=document.getElementById('ov-heatmap'); if(!hm)return;
   const uniq=[];
-  USERS.forEach(u=>{const av=S.availability[u.name];if(av?.ranges)av.ranges.forEach(r=>{if(!uniq.find(x=>x.start===r.start&&x.end===r.end))uniq.push({...r});});});
+  partyUsers.forEach(u=>{const av=S.availability[u.name];if(av?.ranges)av.ranges.forEach(r=>{if(!uniq.find(x=>x.start===r.start&&x.end===r.end))uniq.push({...r});});});
+  if(!uniq.length){hm.innerHTML='<div style="font-size:.74rem;color:var(--muted2)">No availability submitted yet</div>';return;}
   uniq.sort((a,b)=>a.start.localeCompare(b.start));
   uniq.slice(0,10).forEach(r=>{
-    let cnt=0;USERS.forEach(u=>{const av=S.availability[u.name];if(av?.ranges)for(const r2 of av.ranges)if(r2.start<=r.end&&r2.end>=r.start){cnt++;break;}});
-    const pct=USERS.length?cnt/USERS.length:0;
+    let cnt=0;partyUsers.forEach(u=>{const av=S.availability[u.name];if(av?.ranges)for(const r2 of av.ranges)if(r2.start<=r.end&&r2.end>=r.start){cnt++;break;}});
+    const pct=partyUsers.length?cnt/partyUsers.length:0;
     const col=pct>.66?'#e0e0e0':pct>.33?'#888':'#444';
-    hm.innerHTML+=`<div class="heat-row"><span class="heat-lbl">${fmtDate(r.start)}</span><div class="heat-wrap"><div class="heat-fill" style="width:${pct*100}%;background:${col}"></div></div><span class="heat-cnt">${cnt}/${USERS.length}</span></div>`;
+    hm.innerHTML+=`<div class="heat-row"><span class="heat-lbl">${fmtDate(r.start)}</span><div class="heat-wrap"><div class="heat-fill" style="width:${pct*100}%;background:${col}"></div></div><span class="heat-cnt">${cnt}/${partyUsers.length}</span></div>`;
   });
 }
 
-// ═══════════════════════════════════
-//  ADMIN
-// ═══════════════════════════════════
-function renderAdmin(){
-  document.getElementById('admin-trip-name').value=S.tripName;
-  document.getElementById('admin-cal-start').value=S.calStart||'2026-04-01';
-  document.getElementById('admin-cal-end').value=S.calEnd||'2026-07-18';
-  document.getElementById('admin-cur-pid').textContent=activePartyId;
-  updateCalPreview();renderAdminPartyList();renderAdminUserList();populateAdminSelects();
-  updateLockToggle('avail');updateLockToggle('acts');
-  const pb=document.getElementById('push-btn');
-  if(S.pushed){pb.textContent='✅ Pushed to group';pb.classList.add('pushed');}
-  else{pb.textContent='🚀 Push to Group';pb.classList.remove('pushed');}
-}
-
-function renderAdminPartyList(){
-  const list=document.getElementById('admin-party-list');if(!list)return;
-  list.innerHTML='';
-  const parties=allPartyIds.length>0?allPartyIds:[activePartyId];
-  parties.forEach(pid=>{
-    const isCur=pid===activePartyId;
-    const row=document.createElement('div');row.className='party-row'+(isCur?' cur':'');
-    row.innerHTML=`<div class="pr-dot ${isCur?'on':'off'}"></div><span class="pr-name${isCur?' cur':''}">${esc(pid)}</span>${isCur?'<span class="pr-badge">Active</span>':`<button class="pr-sw" onclick="adminSwitchParty('${esc(pid)}')">Switch →</button><button class="pr-del" onclick="confirmDeleteParty('${esc(pid)}')">Delete</button>`}`;
-    list.appendChild(row);
-  });
-}
-
-async function adminSwitchParty(pid){
-  document.getElementById('loading-overlay').classList.remove('hidden');
-  setLoading('Switching to '+pid+'...');
-  await loadParty(pid);await loadPartyIds();
-  activePartyId=pid;expandedActs={};
-  document.getElementById('topbar-title').textContent=S.tripName;
-  const up=getUserParties(currentUser);
-  const swBtn=document.getElementById('party-sw-btn');
-  if(up.length>1){swBtn.style.display='flex';document.getElementById('party-sw-label').textContent=S.tripName||pid;}
-  else swBtn.style.display='none';
-  hideLoading();setSyncStatus('synced','Connected · '+pid);
-  renderAdmin();
-}
-
-async function createParty(){
-  const inp=document.getElementById('new-party-id');
-  const pid=inp.value.trim();
-  if(!pid){inp.focus();return;}
-  if(!/^[a-z0-9-]+$/.test(pid)){alert('Use lowercase letters, numbers, and hyphens only.');return;}
-  if(allPartyIds.includes(pid)){alert('A party with that ID already exists.');return;}
-  document.getElementById('loading-overlay').classList.remove('hidden');
-  setLoading('Creating '+pid+'...');
-  try{
-    await sheetsCall('setState',{partyId:pid,state:JSON.parse(JSON.stringify(EMPTY_PARTY))});
-    inp.value='';await loadPartyIds();hideLoading();
-    renderAdminPartyList();
-    alert(`Party "${pid}" created! Switch to it to set it up, then add users.`);
-  }catch(e){hideLoading();alert('Failed: '+e.message);}
-}
-
-async function confirmDeleteParty(pid){
-  if(!confirm(`Delete party "${pid}"? This cannot be undone.`))return;
-  document.getElementById('loading-overlay').classList.remove('hidden');
-  setLoading('Deleting '+pid+'...');
-  try{await sheetsCall('deleteParty',{partyId:pid});await loadPartyIds();}catch(e){console.error(e);}
-  hideLoading();renderAdminPartyList();
-}
-
-function sanitizePartyId(inp){inp.value=inp.value.toLowerCase().replace(/[^a-z0-9-]/g,'');}
-
-function renderAdminUserList(){
-  const list=document.getElementById('admin-user-list');if(!list)return;list.innerHTML='';
-  USERS.forEach((u,i)=>{
-    const row=document.createElement('div');row.className='usr-row';
-    const uParties=getUserParties(u);
-    const pTags=uParties.map(p=>`<span class="ptag${p===activePartyId?' cur':''}">${esc(p)}</span>`).join('');
-    row.innerHTML=`
-      <div class="usr-av uc${i%8}">${u.name[0]}</div>
-      <div class="usr-info">
-        <div class="usr-name">${esc(u.name)}${u.name===currentUser.name?' <span style="font-size:.58rem;color:var(--muted)">(you)</span>':''}</div>
-        <div class="usr-role">${u.role}</div>
-        <div class="usr-parties">${pTags}<button style="font-size:.6rem;background:transparent;border:1px dashed var(--border2);border-radius:20px;padding:2px 8px;color:var(--muted2)" onclick="openUserAccess('${esc(u.name)}')">✏️ Edit access</button></div>
-      </div>
-      ${USERS.length>1&&u.name!==currentUser.name?`<button class="btn-d" style="padding:3px 7px;font-size:.62rem;align-self:center" onclick="removeUser('${esc(u.name)}')">✕</button>`:''}`;
-    list.appendChild(row);
-  });
-}
-
-let editingAccessUser=null;
-function openUserAccess(uname){
-  editingAccessUser=uname;
-  const u=USERS.find(x=>x.name===uname);
-  document.getElementById('mua-title').textContent=`Edit Access — ${uname}`;
-  const parties=allPartyIds.length>0?allPartyIds:[activePartyId];
-  const uParties=getUserParties(u);
-  const content=document.getElementById('mua-content');content.innerHTML='';
-  parties.forEach(pid=>{
-    const checked=uParties.includes(pid);
-    const row=document.createElement('div');row.className='chk-row';
-    row.innerHTML=`<div><div class="chk-lbl">${esc(pid)}</div></div><div class="chk-box${checked?' chk':''}" data-pid="${esc(pid)}" onclick="toggleChk(this)">${checked?'✓':''}</div>`;
-    content.appendChild(row);
-  });
-  openModal('modal-user-access');
-}
-
-function toggleChk(el){const c=el.classList.toggle('chk');el.textContent=c?'✓':'';}
-
-function saveUserAccess(){
-  if(!editingAccessUser)return;
-  const idx=USERS.findIndex(u=>u.name===editingAccessUser);if(idx<0)return;
-  USERS[idx].parties=Array.from(document.querySelectorAll('#mua-content .chk-box.chk')).map(el=>el.dataset.pid);
-  if(currentUser.name===editingAccessUser)currentUser=USERS[idx];
-  saveUsers();closeModal('modal-user-access');renderAdminUserList();
-}
-
-function populateAdminSelects(){
-  const as=document.getElementById('admin-final-act');
-  if(as){
-    as.innerHTML='<option value="">— Select activity —</option>';
-    S.activities.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=a.name;as.appendChild(o);});
-    if(S.pushData.actId)as.value=S.pushData.actId;
-  }
-  const us=document.getElementById('admin-edit-user-sel');
-  if(us){
-    us.innerHTML='';
-    USERS.forEach(u=>{const o=document.createElement('option');o.value=u.name;o.textContent=u.name+' ('+u.role+')';us.appendChild(o);});
-    loadProfileForEdit();
-  }
-}
-
-function loadProfileForEdit(){
-  const sel=document.getElementById('admin-edit-user-sel');
-  const area=document.getElementById('admin-profile-edit-area');
-  if(!sel||!area)return;
-  const u=USERS.find(x=>x.name===sel.value);if(!u)return;
-  area.innerHTML=`
-    <div class="fl"><label class="fl-label">City</label><input class="fi" id="aec" value="${esc(u.city||'')}" placeholder="e.g. Austin, TX"/></div>
-    <div class="fl"><label class="fl-label">Bio</label><textarea class="fi" id="aeb" style="min-height:50px">${esc(u.bio||'')}</textarea></div>
-    <div class="fl"><label class="fl-label">Tags</label><input class="fi" id="aet" value="${esc((u.tags||[]).join(', '))}" placeholder="🏀 NBA, 🎸 Music"/></div>
-    <button class="btn-p" style="width:100%" onclick="saveAdminProfile('${esc(u.name)}')">Save Profile</button>`;
-}
-
-function saveAdminProfile(uname){
-  const idx=USERS.findIndex(u=>u.name===uname);if(idx<0)return;
-  USERS[idx].city=document.getElementById('aec').value.trim();
-  USERS[idx].bio=document.getElementById('aeb').value.trim();
-  USERS[idx].tags=document.getElementById('aet').value.split(',').map(t=>t.trim()).filter(Boolean);
-  if(currentUser.name===uname)currentUser=USERS[idx];
-  saveUsers();
-  const btn=document.querySelector('#admin-profile-edit-area .btn-p');
-  if(btn){const o=btn.textContent;btn.textContent='Saved ✓';setTimeout(()=>btn.textContent=o,1500);}
-}
-
-function saveAdminTripName(){
-  const v=document.getElementById('admin-trip-name').value.trim();if(!v)return;
-  S.tripName=v;
-  document.getElementById('topbar-title').textContent=v;
-  document.getElementById('party-sw-label').textContent=v;
-  saveState();
-  const btn=event.target;btn.textContent='Saved ✓';setTimeout(()=>btn.textContent='Save Name',1500);
-}
-
-function saveCalRange(){
-  const start=document.getElementById('admin-cal-start').value;
-  const end=document.getElementById('admin-cal-end').value;
-  if(!start||!end){alert('Please set both dates.');return;}
-  if(start>=end){alert('Start must be before end.');return;}
-  S.calStart=start;S.calEnd=end;
-  const s=getCalStart();calYear=s.getFullYear();calMonth=s.getMonth();
-  saveState();updateCalPreview();
-  const btn=event.target;btn.textContent='Saved ✓';setTimeout(()=>btn.textContent='Save Calendar Range',1500);
-}
-
-function updateCalPreview(){
-  const start=document.getElementById('admin-cal-start')?.value;
-  const end=document.getElementById('admin-cal-end')?.value;
-  const el=document.getElementById('admin-cal-preview');if(!el)return;
-  if(start&&end){
-    const s=new Date(start),e=new Date(end);
-    const mo=Math.round((e-s)/(1000*60*60*24*30.4));
-    el.textContent=MONTHS[s.getMonth()]+' '+s.getFullYear()+' → '+MONTHS[e.getMonth()]+' '+e.getFullYear()+' · ~'+mo+' month'+(mo!==1?'s':'');
-  }else el.textContent='';
-}
-
-function toggleLock(key){S.locks[key]=!S.locks[key];updateLockToggle(key);saveState();}
-function updateLockToggle(key){
-  const id=key==='avail'?'lock-avail':'lock-acts';
-  const btn=document.getElementById(id);if(!btn)return;
-  const unlocked=!S.locks[key];
-  btn.classList.toggle('on',unlocked);btn.classList.toggle('off',!unlocked);
-}
-
-function pushToGroup(){
-  const actId=parseInt(document.getElementById('admin-final-act').value);
-  if(!actId){alert('Please select a final activity');return;}
-  S.pushData.actId=actId;
-  S.pushData.dates=document.getElementById('admin-final-dates').textContent.replace('Tap to select dates...','').trim();
-  S.pushData.message=document.getElementById('admin-push-msg').value.trim();
-  S.pushed=true;saveState();
-  document.getElementById('tab-overview').style.display='';
-  const pb=document.getElementById('push-btn');pb.textContent='✅ Pushed to group';pb.classList.add('pushed');
-}
-
-function pickFinalDates(){
-  const list=document.getElementById('modal-date-list');list.innerHTML='';
-  const allR=[];
-  USERS.forEach(u=>{const a=S.availability[u.name];if(a?.ranges)a.ranges.forEach(r=>allR.push({...r,user:u.name}));});
-  if(!allR.length){list.innerHTML='<div style="color:var(--muted);font-size:.78rem;padding:8px 0">No availability submitted yet</div>';}
-  allR.forEach(r=>{
-    const btn=document.createElement('button');
-    btn.className='btn-g';btn.style.cssText='width:100%;margin-bottom:6px;text-align:left;';
-    btn.textContent=fmtDate(r.start)+' – '+fmtDate(r.end)+' ('+r.user+')';
-    btn.onclick=()=>{document.getElementById('admin-final-dates').textContent=fmtDate(r.start)+' – '+fmtDate(r.end);closeModal('modal-date-pick');};
-    list.appendChild(btn);
-  });
-  openModal('modal-date-pick');
-}
-
-function addUser(){
-  const name=document.getElementById('nu-name').value.trim();
-  const pass=document.getElementById('nu-pass').value;
-  const role=document.getElementById('nu-role').value;
-  if(!name||!pass){alert('Name and password required');return;}
-  if(USERS.find(u=>u.name.toLowerCase()===name.toLowerCase())){alert('Name already exists');return;}
-  USERS.push({name,password:pass,role,city:'',bio:'',tags:[],parties:[activePartyId]});
-  saveUsers();closeModal('modal-add-user');
-  renderAdminUserList();populateAdminSelects();
-  document.getElementById('nu-name').value='';document.getElementById('nu-pass').value='';
-}
-
-function removeUser(name){
-  if(!confirm(`Remove ${name}?`))return;
-  USERS=USERS.filter(u=>u.name!==name);
-  saveUsers();renderAdminUserList();populateAdminSelects();
-}
-
-// ═══════════════════════════════════
+// ═══════════════════════════════════════════════════════
 //  MODALS
-// ═══════════════════════════════════
+// ═══════════════════════════════════════════════════════
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
-document.querySelectorAll('.modal-ov').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
+document.querySelectorAll('.modal-ov').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
+});
+// wire party access modal
+document.querySelector('.db-edit')?.addEventListener('click', openPartyAccessModal);
 
-// ═══════════════════════════════════
+// ═══════════════════════════════════════════════════════
 //  UTILS
-// ═══════════════════════════════════
+// ═══════════════════════════════════════════════════════
 function toDS(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function fmtDate(s){if(!s)return'';const[,m,d]=s.split('-');return MONTHS_S[parseInt(m)-1]+' '+parseInt(d);}
 function daysB(s,e){return Math.round((new Date(e)-new Date(s))/(1000*60*60*24))+1;}
 function isToday(d){const t=new Date();return d.getDate()===t.getDate()&&d.getMonth()===t.getMonth()&&d.getFullYear()===t.getFullYear();}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-// ═══════════════════════════════════
+// ═══════════════════════════════════════════════════════
 //  INIT
-// ═══════════════════════════════════
+// ═══════════════════════════════════════════════════════
 (async function init(){
   setLoading('Connecting...');
   await loadUsers();
   hideLoading();
-  document.getElementById('login-trip-name').textContent='Party Planner';
+  document.getElementById('login-title').textContent='Party Planner';
   const admins=USERS.filter(u=>u.role==='admin');
-  if(admins.length>0)document.getElementById('login-hint').textContent=`Reach out to ${admins[0].name} if you need access`;
+  if(admins.length>0) document.getElementById('login-hint').textContent=`Reach out to ${admins[0].name} if you need access`;
 })();
 </script>
 </body>
