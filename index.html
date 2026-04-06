@@ -8,7 +8,7 @@
 <title>Party Planner</title>
 <script>
   // ── CONFIGURE FOR EACH INSTALLATION ──────────────────────────
-  const SCRIPT_URL       = 'https://script.google.com/macros/s/AKfycbxO6uHaPpNpWgfzS5YG_Y-LUYU5rsJ9zGL0tQEbKv9TqO-1OjCNgZnG1u5xJ1Pkzd5rBg/exec';
+  const SCRIPT_URL       = 'https://script.google.com/macros/s/AKfycbzSy6apM9doT4KK6hk9jTBgFR_eHMw3HkHdTmrM6cx8eqZsVyoOGz7C4zJ7GiJ-TU7cDw/exec';
   const DEFAULT_PARTY_ID = 'my-party';
   // NOTE: map.jpg must be in the same folder as index.html on GitHub
   // ─────────────────────────────────────────────────────────────
@@ -1375,14 +1375,24 @@ let editingUserId = null, cdInterval = null, adminCdInterval = null;
 //  SHEETS API
 // ═══════════════════════════════════════════════════════
 async function sheetsCall(action, payload={}){
-  const res = await fetch(SCRIPT_URL, {
-    method:'POST', headers:{'Content-Type':'text/plain'},
-    body: JSON.stringify({action, ...payload}),
-  });
-  if(!res.ok) throw new Error('HTTP '+res.status);
-  const json = await res.json();
-  if(json.error) throw new Error(json.error);
-  return json.data;
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(), 15000);
+  try{
+    const res = await fetch(SCRIPT_URL, {
+      method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action, ...payload}),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const json = await res.json();
+    if(json.error) throw new Error(json.error);
+    return json.data;
+  }catch(e){
+    clearTimeout(timeout);
+    if(e.name==='AbortError') throw new Error('Request timed out — check Apps Script deployment');
+    throw e;
+  }
 }
 
 function setSyncStatus(state, msg){
@@ -2705,11 +2715,18 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 // ═══════════════════════════════════════════════════════
 (async function init(){
   setLoading('Connecting...');
-  await loadUsers();
-  hideLoading();
-  document.getElementById('login-title').textContent='Party Planner';
-  const admins=USERS.filter(u=>u.role==='admin');
-  if(admins.length>0) document.getElementById('login-hint').textContent=`Reach out to ${admins[0].name} if you need access`;
+  try{
+    await loadUsers();
+  } catch(e){
+    console.error('init loadUsers failed:',e);
+    // seed default admin so app is still usable
+    USERS=[{name:'Admin',password:'Teresaisawesome',role:'admin',city:'',bio:'',tags:[],parties:[],email:''}];
+  } finally {
+    hideLoading();
+    document.getElementById('login-title').textContent='Party Planner';
+    const admins=USERS.filter(u=>u.role==='admin');
+    if(admins.length>0) document.getElementById('login-hint').textContent=`Reach out to ${admins[0].name} if you need access`;
+  }
 })();
 </script>
 </body>
