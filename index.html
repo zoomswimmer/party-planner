@@ -10,10 +10,11 @@
   // ── CONFIGURE FOR EACH INSTALLATION ──────────────────────────
   const SCRIPT_URL       = 'https://script.google.com/macros/s/AKfycbzSy6apM9doT4KK6hk9jTBgFR_eHMw3HkHdTmrM6cx8eqZsVyoOGz7C4zJ7GiJ-TU7cDw/exec';
   const DEFAULT_PARTY_ID = 'my-party';
-  // NOTE: map.jpg must be in the same folder as index.html on GitHub
   // ─────────────────────────────────────────────────────────────
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
 
@@ -50,7 +51,9 @@ a{color:inherit;text-decoration:none;}
 /* ═══════════════════════════════════════════
    LAYOUT
 ═══════════════════════════════════════════ */
-#app{display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden;
+  max-width:500px;margin:0 auto;position:relative;}
+body::before{content:'';position:fixed;inset:0;background:#050505;z-index:-1;}
 
 /* ── VIEWS ── */
 .view{display:none;flex-direction:column;height:100%;}
@@ -163,19 +166,17 @@ select.field-input option{background:var(--card2);}
 .home-title{font-family:var(--font-display);font-size:1.8rem;font-weight:700;color:var(--white);line-height:1.1;}
 .home-sub{font-size:.74rem;color:var(--muted);margin-top:4px;}
 
-.map-outer{margin:0 12px;border-radius:10px;overflow:hidden;border:1px solid var(--border);background:#111;position:relative;}
-.map-svg-el{width:100%;display:block;}
+
+
 
 /* dot */
-.map-pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;z-index:5;}
-.map-pin-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--bg);transition:transform .15s;}
-.map-pin:hover .map-pin-dot{transform:scale(1.3);}
+
+
+
 .map-pin-pulse{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
   width:22px;height:22px;border-radius:50%;opacity:0;animation:mpulse 2.4s ease-out infinite;}
 @keyframes mpulse{0%{transform:translate(-50%,-50%) scale(.5);opacity:.5;}100%{transform:translate(-50%,-50%) scale(2.2);opacity:0;}}
-.map-pin-label{position:absolute;top:14px;left:50%;transform:translateX(-50%);
-  font-size:.58rem;font-weight:600;color:var(--text2);white-space:nowrap;
-  background:rgba(12,12,12,.75);border-radius:4px;padding:1px 4px;pointer-events:none;}
+
 
 /* bio popup */
 .bio-popup{position:absolute;z-index:20;background:var(--card);border:1px solid var(--border2);
@@ -767,12 +768,21 @@ select.field-input option{background:var(--card2);}
 /* map container */
 .map-outer{margin:0 12px;border-radius:10px;overflow:hidden;border:1px solid var(--border);
   background:#0a0a0a;position:relative;}
-.map-img{width:100%;display:block;
-  filter:invert(1) brightness(0.25) contrast(2);}
+#leaflet-map{width:100%;height:200px;}
+/* Override Leaflet defaults for dark theme */
+.leaflet-container{background:#0a0a0a!important;}
+.leaflet-control-zoom,.leaflet-control-attribution{display:none!important;}
+/* Custom pin styles */
+.lf-pin{width:12px;height:12px;border-radius:50%;border:2px solid #0c0c0c;
+  cursor:pointer;transition:transform .15s;position:relative;}
+.lf-pin:hover{transform:scale(1.4);}
+.lf-pulse{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:22px;height:22px;border-radius:50%;opacity:0;
+  animation:mpulse 2.4s ease-out infinite;pointer-events:none;}
+
 .map-pin{position:absolute;transform:translate(-50%,-50%);cursor:pointer;z-index:5;}
-.map-pin-dot{width:11px;height:11px;border-radius:50%;border:2px solid #0c0c0c;
-  transition:transform .15s;}
-.map-pin:hover .map-pin-dot{transform:scale(1.35);}
+
+
 .map-pin-pulse{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
   width:22px;height:22px;border-radius:50%;opacity:0;animation:mpulse 2.4s ease-out infinite;}
 @keyframes mpulse{0%{transform:translate(-50%,-50%) scale(.5);opacity:.5;}
@@ -1097,10 +1107,8 @@ select.field-input option{background:var(--card2);}
         <div class="home-title" id="home-title">Hey there &#128075;</div>
         <div class="home-sub" id="home-sub">Tap a dot to see who's coming from where</div>
       </div>
-      <!-- NOTE: map.jpg must be in the same folder as index.html -->
       <div class="map-outer" id="map-outer">
-        <img src="map.jpg" class="map-img" alt="US Map" id="map-img"/>
-        <div id="map-pins"></div>
+        <div id="leaflet-map"></div>
         <div id="bio-popup" style="display:none"></div>
       </div>
       <div class="crew-strip" id="crew-strip"></div>
@@ -1342,14 +1350,57 @@ const CITY_COORDS = {
   "san diego":[14,68],"seattle":[11,17],"seattle, wa":[11,17],
   "portland":[11,22],"portland, or":[11,22],"sacramento":[10,50],
 };
+// Geocoding cache: city string → [pctX, pctY] (for legacy pct system)
+const geoCache = {};
+// Raw lat/lng cache: city string → [lat, lng]
+const latLngCache = {};
+
 function getCityCoords(city){
   if(!city) return null;
   const k = city.trim().toLowerCase();
+  // Check runtime cache first (from Nominatim lookups)
+  if(geoCache[k]) return geoCache[k];
+  // Then check static table
   if(CITY_COORDS[k]) return CITY_COORDS[k];
   for(const [key,v] of Object.entries(CITY_COORDS)){
     if(k.includes(key) || key.includes(k.split(',')[0].trim())) return v;
   }
   return null;
+}
+
+// Convert lat/lng to map percentage coords
+// Map image covers roughly: lat 24-49N, lng 125-67W
+function latLngToPct(lat, lng){
+  const minLat=24, maxLat=49.5, minLng=-125, maxLng=-66.5;
+  const x = ((Math.abs(lng) - Math.abs(minLng)) / (Math.abs(maxLng) - Math.abs(minLng))) * 100;
+  // Wait — lng goes from -125 (west) to -66.5 (east), so west is left
+  const xPct = ((lng - minLng) / (maxLng - minLng)) * 88 + 6; // 6-94% range
+  const yPct = ((maxLat - lat) / (maxLat - minLat)) * 78 + 8; // 8-86% range
+  return [Math.round(xPct*10)/10, Math.round(yPct*10)/10];
+}
+
+async function geocodeCity(city){
+  if(!city) return null;
+  const k = city.trim().toLowerCase();
+  if(geoCache[k]) return geoCache[k];
+  if(CITY_COORDS[k]) return CITY_COORDS[k];
+  try{
+    const q = encodeURIComponent(city.trim() + ', USA');
+    const url = `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1&countrycodes=us`;
+    const res = await fetch(url, {headers:{'Accept-Language':'en','User-Agent':'PartyPlanner/1.0'}});
+    if(!res.ok) return null;
+    const data = await res.json();
+    if(!data.length) return null;
+    const lat = parseFloat(data[0].lat);
+    const lng = parseFloat(data[0].lon);
+    const pct = latLngToPct(lat, lng);
+    geoCache[k] = pct;
+    latLngCache[k] = [lat, lng]; // store raw for Leaflet
+    return pct;
+  }catch(e){
+    console.warn('Geocode failed for',city,e);
+    return null;
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2184,36 +2235,115 @@ function updateCountdownBanner(){
 // ═══════════════════════════════════════════════════════
 //  GUEST: HOME / MAP
 // ═══════════════════════════════════════════════════════
-function renderHome(){
+async function renderHome(){
   document.getElementById('home-title').textContent=`Hey ${currentUser.name} 👋`;
-  const inEvent=USERS.filter(u=>getUserParties(u).includes(activePartyId)||u.role==='admin'?false:getUserParties(u).includes(activePartyId));
   // show all users assigned to this party
   const partyUsers=USERS.filter(u=>getUserParties(u).includes(activePartyId)||u.name===currentUser.name);
   document.getElementById('home-sub').textContent=`${partyUsers.length} people · tap a dot to see who's coming from where`;
-  renderMap(partyUsers); renderCrewStrip(partyUsers);
+  await renderMap(partyUsers); renderCrewStrip(partyUsers);
 }
 
-function renderMap(partyUsers){
-  const pins=document.getElementById('map-pins'); pins.innerHTML='';
-  const imgEl=document.getElementById('map-img');
-  if(!imgEl) return;
-  activeBioUser=null;
+let leafletMap = null;
+let leafletMarkers = [];
+
+async function renderMap(partyUsers){
+  activeBioUser = null;
   document.getElementById('bio-popup').style.display='none';
+
+  // Geocode all users in parallel first
+  await Promise.all(partyUsers.map(u=>u.city?geocodeCity(u.city):Promise.resolve(null)));
+
+  // Initialise Leaflet map on first call
+  if(!leafletMap){
+    leafletMap = L.map('leaflet-map', {
+      center: [39.5, -98.35],  // geographic center of USA
+      zoom: 3,
+      zoomControl: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      touchZoom: false,
+      dragging: false,
+      keyboard: false,
+      attributionControl: false,
+    });
+    // CartoDB Dark Matter — free, no API key, dark style
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+    }).addTo(leafletMap);
+  }
+
+  // Remove old markers
+  leafletMarkers.forEach(m=>leafletMap.removeLayer(m));
+  leafletMarkers = [];
+
+  // Add markers for each user with a city
   partyUsers.forEach((u,i)=>{
-    const xy=getCityCoords(u.city); if(!xy)return;
-    const col=UC[i%UC.length];
-    const pin=document.createElement('div'); pin.className='map-pin';
-    // map image is 626x626 but displayed at container width
-    // use percentage coords from our lookup table
-    pin.style.left=xy[0]+'%'; pin.style.top=xy[1]+'%';
-    pin.innerHTML=`<div class="map-pin-pulse" style="background:${col}"></div>
-      <div class="map-pin-dot" style="background:${col}"></div>`;
-    pin.addEventListener('click',e=>{e.stopPropagation();showBio(u,i,xy,partyUsers);});
-    pins.appendChild(pin);
+    // Get lat/lng from geocache or convert from pct coords
+    const k = (u.city||'').trim().toLowerCase();
+    let lat, lng;
+    if(geoCache[k]){
+      // geoCache stores [pctX,pctY] — need to check if we stored raw lat/lng too
+      // We'll store raw lat/lng in a separate latLngCache
+    }
+    if(latLngCache[k]){
+      lat = latLngCache[k][0];
+      lng = latLngCache[k][1];
+    } else if(CITY_COORDS[k]){
+      // Convert pct back to rough lat/lng for static cities
+      const pct = CITY_COORDS[k];
+      lat = 49.5 - (pct[1]/100)*25.5;
+      lng = -125 + (pct[0]/100)*58.5;
+    } else {
+      return; // no coords available
+    }
+    const col = UC[i%UC.length];
+
+    // Create custom div icon with pulse
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="position:relative;width:12px;height:12px">
+        <div class="lf-pulse" style="background:${col}"></div>
+        <div class="lf-pin" style="background:${col}"></div>
+      </div>`,
+      iconSize: [12,12],
+      iconAnchor: [6,6],
+    });
+
+    const marker = L.marker([lat,lng], {icon}).addTo(leafletMap);
+    marker.on('click', ()=>showBioLeaflet(u, i, lat, lng, partyUsers));
+    leafletMarkers.push(marker);
   });
-  document.getElementById('map-outer').addEventListener('click',()=>{
-    document.getElementById('bio-popup').style.display='none'; activeBioUser=null;
-  },{once:false});
+}
+
+function showBioLeaflet(user, idx, lat, lng, partyUsers){
+  if(activeBioUser===user.name){
+    document.getElementById('bio-popup').style.display='none';
+    activeBioUser=null;return;
+  }
+  activeBioUser=user.name;
+  const col=UC[idx%UC.length],fg=UFG[idx%UFG.length];
+  const isSelf=user.name===currentUser.name;
+  const popup=document.getElementById('bio-popup');
+  popup.innerHTML=`
+    <div class="bio-head">
+      <div class="bio-av" style="background:${col};color:${fg}">${user.name[0]}</div>
+      <div><div class="bio-name">${esc(user.name)}${isSelf?' <span style="font-size:.58rem;font-weight:400;color:var(--muted)">(you)</span>':''}</div>
+      <div class="bio-city">📍 ${esc(user.city||'No city set')}</div></div>
+    </div>
+    ${user.bio?`<div class="bio-quote">"${esc(user.bio)}"</div>`:'<div class="bio-quote" style="color:var(--muted2);font-style:normal">No bio yet</div>'}
+    <div class="bio-tags">${(user.tags||[]).map(t=>`<span class="bio-tag">${esc(t)}</span>`).join('')}</div>
+    ${isSelf?`<a class="bio-edit" href="#" onclick="switchGuestTab('profile',null);return false;">✏️ Edit your profile</a>`:''}`;
+  popup.style.display='block';
+  // Position popup near marker
+  const mapEl=document.getElementById('leaflet-map');
+  const point=leafletMap.latLngToContainerPoint([lat,lng]);
+  let left=point.x-82, top=point.y-174;
+  if(top<4)top=point.y+14;
+  if(left<4)left=4;
+  if(left+164>mapEl.offsetWidth-4)left=mapEl.offsetWidth-168;
+  popup.style.left=left+'px'; popup.style.top=top+'px';
+}
+
 }
 
 function showBio(user,idx,xy,partyUsers){
@@ -2249,7 +2379,11 @@ function renderCrewStrip(partyUsers){
     chip.innerHTML=`<div class="crew-cdot" style="background:${col}"></div>
       <span class="crew-cname">${esc(u.name)}</span>
       <span class="crew-ccity">${esc(u.city||'?')}</span>`;
-    chip.addEventListener('click',()=>{const xy=getCityCoords(u.city);if(xy)showBio(u,i,xy,partyUsers);});
+    chip.addEventListener('click',()=>{
+      const k=(u.city||'').trim().toLowerCase();
+      const ll=latLngCache[k];
+      if(ll)showBioLeaflet(u,i,ll[0],ll[1],partyUsers);
+    });
     strip.appendChild(chip);
   });
 }
@@ -2268,12 +2402,15 @@ function renderProfileEdit(){
   document.getElementById('profile-bio').value=currentUser.bio||'';
   document.getElementById('profile-tags').value=(currentUser.tags||[]).join(', ');
 }
-function saveProfile(){
+async function saveProfile(){
   const idx=USERS.findIndex(u=>u.name===currentUser.name);
-  USERS[idx].city=document.getElementById('profile-city').value.trim();
+  const city=document.getElementById('profile-city').value.trim();
+  USERS[idx].city=city;
   USERS[idx].bio=document.getElementById('profile-bio').value.trim();
   USERS[idx].tags=document.getElementById('profile-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
   currentUser=USERS[idx];
+  // Pre-geocode city so dot appears on map immediately
+  if(city) await geocodeCity(city);
   saveUsers();
   switchGuestTab('home',document.querySelector('[data-tab=home]'));
 }
@@ -2719,6 +2856,15 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 // ═══════════════════════════════════════════════════════
 (async function init(){
   setLoading('Connecting...');
+  // Pre-populate latLngCache from static CITY_COORDS table
+  // (convert pct back to approximate lat/lng for Leaflet)
+  Object.entries(CITY_COORDS).forEach(([k,pct])=>{
+    if(!latLngCache[k]){
+      const lat = 49.5 - (pct[1]/100)*25.5;
+      const lng = -125 + (pct[0]/100)*58.5;
+      latLngCache[k] = [lat, lng];
+    }
+  });
   try{
     await loadUsers();
   } catch(e){
