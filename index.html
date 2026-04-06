@@ -472,9 +472,9 @@ select.field-input option{background:var(--card2);}
 /* ═══════════════════════════════════════════
    MODAL / OVERLAY
 ═══════════════════════════════════════════ */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;
   display:none;align-items:flex-end;justify-content:center;}
-.modal-overlay.open{display:flex;}
+.modal-ov.open{display:flex;}
 .modal-sheet{background:var(--surface);border:1px solid var(--border);border-radius:16px 16px 0 0;
   padding:20px 18px 32px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;
   animation:slideUp .2s ease;}
@@ -952,14 +952,14 @@ select.field-input option{background:var(--card2);}
           <div class="fl" style="margin-bottom:0"><label class="fl-label">End</label><input class="fi" type="date" id="detail-cal-end" oninput="updateCalPreview()"/></div>
         </div>
         <div id="detail-cal-preview" style="font-size:.72rem;color:var(--muted);margin-bottom:8px"></div>
-        <button class="btn-p" style="width:100%" onclick="saveCalRange()">Save Range</button>
+        <button class="btn-p" style="width:100%" onclick="saveCalRange(this)">Save Range</button>
       </div>
 
       <!-- Users / Party Access -->
       <div class="detail-block">
         <div class="db-hdr">
           <div class="db-title">&#128101; Users / Party Access</div>
-          <button class="db-edit" onclick="openModal('modal-party-access')">Edit</button>
+          <button class="db-edit" onclick="openPartyAccessModal()">Edit</button>
         </div>
         <div id="detail-users-chips" style="display:flex;gap:5px;flex-wrap:wrap"></div>
       </div>
@@ -977,7 +977,7 @@ select.field-input option{background:var(--card2);}
             <div class="cd-admin-lbl">Showing live on participant pages</div>
           </div>
         </div>
-        <button class="btn-p" style="width:100%;margin-top:8px" onclick="saveDeadline()">Save Deadline</button>
+        <button class="btn-p" style="width:100%;margin-top:8px" onclick="saveDeadline(this)">Save Deadline</button>
       </div>
 
       <!-- Lock Sections -->
@@ -1571,6 +1571,10 @@ document.getElementById('inp-name').addEventListener('keydown',e=>{if(e.key==='E
 function showPage(pageId){
   document.querySelectorAll('.apage').forEach(p=>p.classList.remove('active'));
   document.getElementById(pageId)?.classList.add('active');
+  // hide admin nav on detail/final/create pages, show on events page
+  const hideNavOn=['apage-detail','apage-final','apage-create'];
+  const nav=document.getElementById('admin-nav');
+  if(nav) nav.style.display=hideNavOn.includes(pageId)?'none':'';
   // scroll to top
   const scroll = document.getElementById(pageId)?.querySelector('[style*="overflow-y:auto"]')
                || document.getElementById(pageId)?.querySelector('.apage-scroll');
@@ -1780,7 +1784,7 @@ function sanitizePartyId(inp){inp.value=inp.value.toLowerCase().replace(/[^a-z0-
 // ═══════════════════════════════════════════════════════
 //  ADMIN: CALENDAR RANGE
 // ═══════════════════════════════════════════════════════
-function saveCalRange(){
+function saveCalRange(btn){
   const start=document.getElementById('detail-cal-start').value;
   const end=document.getElementById('detail-cal-end').value;
   if(!start||!end){alert('Please set both dates.');return;}
@@ -1788,7 +1792,7 @@ function saveCalRange(){
   S.calStart=start; S.calEnd=end;
   const s=getCalStart(); calYear=s.getFullYear(); calMonth=s.getMonth();
   saveState(); updateCalPreview();
-  const btn=event.target; btn.textContent='Saved ✓'; setTimeout(()=>btn.textContent='Save Range',1500);
+  if(btn){btn.textContent='Saved ✓'; setTimeout(()=>btn.textContent='Save Range',1500);}
 }
 function updateCalPreview(){
   const start=document.getElementById('detail-cal-start')?.value;
@@ -1804,11 +1808,11 @@ function updateCalPreview(){
 // ═══════════════════════════════════════════════════════
 //  ADMIN: COUNTDOWN TIMER
 // ═══════════════════════════════════════════════════════
-function saveDeadline(){
+function saveDeadline(btn){
   const val=document.getElementById('detail-deadline').value;
   S.deadline=val?new Date(val).toISOString():null;
   saveState(); startAdminCd();
-  const btn=event.target; btn.textContent='Saved ✓'; setTimeout(()=>btn.textContent='Save Deadline',1500);
+  if(btn){btn.textContent='Saved ✓'; setTimeout(()=>btn.textContent='Save Deadline',1500);}
 }
 function startAdminCd(){
   if(adminCdInterval) clearInterval(adminCdInterval);
