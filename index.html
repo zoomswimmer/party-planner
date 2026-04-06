@@ -927,7 +927,7 @@ select.field-input option{background:var(--card2);}
           <input class="fi" id="create-event-name" placeholder="e.g. Mike's Bachelor Trip"/>
         </div>
       </div>
-      <button class="btn-p" style="width:100%;margin-top:4px" onclick="createEvent()">Create Event &#8594;</button>
+      <button class="btn-p" style="width:100%;margin-top:4px" onclick="createNewEvent()">Create Event &#8594;</button>
     </div>
   </div>
 
@@ -1760,27 +1760,41 @@ function getTopActivity(){
 // ═══════════════════════════════════════════════════════
 //  ADMIN: CREATE EVENT
 // ═══════════════════════════════════════════════════════
-async function createEvent(){
+async function createNewEvent(){
   const pid=document.getElementById('create-party-id').value.trim();
   let name=document.getElementById('create-event-name').value.trim();
+  console.log('createEvent called. pid='+pid+' name='+name);
+  console.log('allPartyIds='+JSON.stringify(allPartyIds));
   if(!pid){
     document.getElementById('create-party-id').focus();
     alert('Please enter an Event ID first.');
     return;
   }
-  if(!/^[a-z0-9-]+$/.test(pid)){alert('Use lowercase letters, numbers and hyphens only.');return;}
-  if(allPartyIds.includes(pid)){alert('An event with that ID already exists.');return;}
-  if(!name) name=pid; // default event name to ID if blank
+  if(!/^[a-z0-9-]+$/.test(pid)){
+    alert('Event ID can only contain lowercase letters, numbers and hyphens. Got: '+pid);
+    return;
+  }
+  if(allPartyIds.includes(pid)){
+    alert('An event with that ID already exists: '+pid);
+    return;
+  }
+  if(!name) name=pid;
+  console.log('Passed all checks. Calling sheetsCall...');
   document.getElementById('loading-overlay').classList.remove('hidden');
   setLoading('Creating '+pid+'...');
   try{
     const newParty={...EMPTY_PARTY, tripName:name};
-    await sheetsCall('setState',{partyId:pid,state:newParty});
+    console.log('Sending setState for '+pid);
+    const result = await sheetsCall('setState',{partyId:pid,state:newParty});
+    console.log('setState result:'+JSON.stringify(result));
     document.getElementById('create-party-id').value='';
     document.getElementById('create-event-name').value='';
     await loadPartyIds();
     await openEventDetail(pid);
-  }catch(e){hideLoading();alert('Failed to create event: '+e.message);}
+  }catch(e){
+    hideLoading();
+    console.error('createEvent error:',e);
+    alert('Failed to create event: '+e.message);}
 }
 
 function sanitizePartyId(inp){inp.value=inp.value.toLowerCase().replace(/[^a-z0-9-]/g,'');}
